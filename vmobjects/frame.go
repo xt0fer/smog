@@ -1,6 +1,8 @@
 package vmobjects
 
-type Frame struct {}
+type Frame struct {
+	Array
+}
 
 func NewFrame() *Frame {
 	return &Frame{}

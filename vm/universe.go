@@ -1,20 +1,30 @@
 package vm
 
-import "github.com/xt0fer/smog/vmobjects"
+import (
+	"sync"
 
-type Universe struct {
+	"github.com/xt0fer/smog/vmobjects"
+)
+
+type universe struct {
 	Globals map[vmobjects.Symbol]vmobjects.Object
 	//
 	PathSep string
 	FileSep string
+	//
+	NillObject *vmobjects.Object
 }
 
-func NewUniverse() *Universe {
-	return &Universe{}
+var instantiated *universe
+var once sync.Once
+
+func Universe() *universe {
+	once.Do(func() {
+		instantiated = &universe{}
+	})
+	return instantiated
 }
 
-var universe = NewUniverse()
-
-func (u *Universe) NewArray(size int) *vmobjects.Array {
+func (u *universe) NewArray(size int) *vmobjects.Array {
 	return vmobjects.NewArray(size)
 }

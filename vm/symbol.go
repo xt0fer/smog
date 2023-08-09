@@ -1,14 +1,15 @@
 package vm
 
 type Symbol struct {
+	Object
 	Name  string
-	Nargs int
+	NumberOfSignatureArguments int
 }
 
-func NewSymbol(name string, args int) *Symbol {
+func NewSymbol(name string) *Symbol {
 	ns := &Symbol{}
 	ns.Name = name
-	ns.Nargs = args
+	ns.determineNumberOfSignatureArguments()
 	return ns
 }
 
@@ -20,7 +21,7 @@ func (s *Symbol) SetString(value string) {
 func (s *Symbol) determineNumberOfSignatureArguments() {
 	// Check for binary signature
 	if s.isBinarySignature() {
-		s.Nargs = 2
+		s.NumberOfSignatureArguments = 2
 	} else {
 		// Count the colons in the signature string
 		numberOfColons := 0
@@ -32,12 +33,12 @@ func (s *Symbol) determineNumberOfSignatureArguments() {
 			}
 		}
 		// The number of arguments is equal to the number of colons plus one
-		s.Nargs = numberOfColons + 1
+		s.NumberOfSignatureArguments = numberOfColons + 1
 	}
 }
 
 func (s *Symbol) getNumberOfSignatureArguments() int {
-	return s.Nargs
+	return s.NumberOfSignatureArguments
 }
 
 func (s *Symbol) isBinarySignature() bool {

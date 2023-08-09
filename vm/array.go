@@ -1,8 +1,4 @@
-package vmobjects
-
-import (
-	"github.com/xt0fer/smog/vm"
-)
+package vm
 
 type Array struct {
 	IndexableFields []*Object
@@ -41,13 +37,13 @@ func (a *Array) setNumberOfIndexableFields(value int) {
 
 	// Clear each and every field by putting nil into them
 	for i := 0; i < a.getNumberOfIndexableFields(); i++ {
-		a.setIndexableField(i, vm.Universe().NilObject)
+		a.setIndexableField(i, GetUniverse().NilObject)
 	}
 }
 
 func (a *Array) copyAndExtendWith(value *Object) *Array {
 	// Allocate a new array which has one indexable field more than this array
-	result := vm.Universe().newArray(a.getNumberOfIndexableFields() + 1)
+	result := GetUniverse().NewArray(a.getNumberOfIndexableFields() + 1)
 
 	// Copy the indexable fields from this array to the new array
 	a.copyIndexableFieldsTo(result)

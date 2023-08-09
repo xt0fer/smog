@@ -1,4 +1,4 @@
-package vmobjects
+package vm
 
 type Symbol struct {
 	Name  string

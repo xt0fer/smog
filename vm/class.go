@@ -142,9 +142,9 @@ func (c *Class) lookupInvokable(signature *Symbol) *Invokable {
 
 func (c *Class) lookupFieldIndex(fieldName Symbol) int {
 	// Lookup field with given name in array of instance fields
-	for i := getNumberOfInstanceFields() - 1; i >= 0; i-- {
+	for i := c.getNumberOfInstanceFields() - 1; i >= 0; i-- {
 		// Return the current index if the name matches
-		if fieldName == getInstanceFieldName(i) {
+		if fieldName == c.getInstanceFieldName(i) {
 			return i
 		}
 	}
@@ -171,14 +171,14 @@ func (c *Class) addInstanceInvokable(value Invokable) bool {
 	return true
 }
 
-func (c *Class) addInstancePrimitive(Primitive value) {
+func (c *Class) addInstancePrimitive(value Primitive) {
 	if c.addInstanceInvokable(value) {
 		System.out.print("Warning: Primitive " + value.getSignature().getString())
 		System.out.println(" is not in class definition for class " + getName().getString())
 	}
 }
 
-func (c *Class) getInstanceFieldName(int index) *Symbol {
+func (c *Class) getInstanceFieldName(index int) *Object {
 	// Get the name of the instance field with the given index
 	if index >= c.getNumberOfSuperInstanceFields() {
 		// Adjust the index to account for fields defined in the super class

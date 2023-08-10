@@ -16,3 +16,9 @@ I have included the source for the java version of SOM in `som/`
 - define the first set of SOM words
 - simple lexer
 - to AST or to a bytecode buffer?
+
+the vm is proving interesting. 
+
+- create simple text format for the bytecodes
+- define interpreter for the bytecodes
+- simple lexer and parser to turn SOM code into bytecodes

@@ -2,10 +2,36 @@ package vm
 
 import "fmt"
 
+type IsClass interface {
+	getSuperClass() IsClass;
+	setSuperClass(value IsClass);
+	hasSuperClass() bool;
+	getName() *Symbol;
+	setName(value *Symbol);
+	getInstanceFields() *Array;
+	setInstanceFields(value *Array);
+	getInstanceInvokables() *Array;
+	setInstanceInvokables(value *Array);
+	getNumberOfInstanceInvokables() int;
+	getInstanceInvokable(index int) Invokable;
+	setInstanceInvokable(index int, value Invokable);
+	getDefaultNumberOfFields() int;
+	lookupInvokable(signature *Symbol) Invokable;
+	lookupFieldIndex(fieldName *Symbol) int;
+	addInstanceInvokable(value Invokable) bool;
+	addInstancePrimitive(value *Primitive);
+	getInstanceFieldName(index int) *Symbol;
+	getNumberOfInstanceFields() int;
+	getNumberOfSuperInstanceFields() int;
+	setInstanceFieldsFromStrings(fields []string);
+	hasPrimitives() bool;
+	loadPrimitives();
+	replaceBytecodes();
+}
 type Class struct {
 	Object
 	// Map of symbols to invokables
-	InvokablesTable         map[*Symbol]*Invokable
+	InvokablesTable         map[*Symbol]Invokable
 	SuperClassIndex         int
 	NameIndex               int
 	InstanceFieldsIndex     int
@@ -20,76 +46,70 @@ type Class struct {
 // instanceInvokablesIndex = 1 + instanceFieldsIndex;
 // numberOfClassFields    = 1 + instanceInvokablesIndex;
 
-//    Class()
-//    {
-// 	 // Initialize this class by calling the super constructor
-// 	 super();
-// 	 InvokablesTable = new java.util.HashMap<Symbol,Invokable>()
-//    }
-
 func NewClass(numberOfFields int) *Class {
 	// Initialize this class by calling the super constructor with the given value
 	//super(numberOfFields);
 	c := &Class{}
-	c.InvokablesTable = make(map[*Symbol]*Invokable)
+	c.InvokablesTable = make(map[*Symbol]Invokable)
+	return c
 }
 
-func (c *Class) getSuperClass() *Class {
+func (c *Class) getSuperClass() interface{} {
 	// Get the super class by reading the field with super class index
 	return c.getField(c.SuperClassIndex)
 }
 
-func (c *Class) setSuperClass(value Class) {
+func (c *Class) setSuperClass(value *Class) {
 	// Set the super class by writing to the field with super class index
 	c.setField(c.SuperClassIndex, value)
 }
 
 func (c *Class) hasSuperClass() bool {
 	// Check whether or not this class has a super class
-	return (c.getField(superClassIndex) != GetUniverse().NilObject)
+	return (c.getField(c.SuperClassIndex) != GetUniverse().NilObject)
 }
 
-func (c *Class) getName() *Symbol {
+func (c *Class) getName() interface{} {
 	// Get the name of this class by reading the field with name index
-	return c.getField(nameIndex)
+	return c.getField(c.NameIndex)
 }
 
-func (c *Class) setName(value Symbol) {
+func (c *Class) setName(value interface{}) {
 	// Set the name of this class by writing to the field with name index
-	setField(nameIndex, value)
+	c.setField(c.NameIndex, value)
 }
 
-func (c *Class) getInstanceFields() *Array {
+func (c *Class) getInstanceFields() interface{} {
 	// Get the instance fields by reading the field with the instance fields index
-	return c.getField(instanceFieldsIndex)
+	return c.getField(c.InstanceFieldsIndex)
 }
 
-func (c *Class) setInstanceFields(value Array) {
+func (c *Class) setInstanceFields(value interface{}) {
 	// Set the instance fields by writing to the field with the instance fields index
-	c.setField(instanceFieldsIndex, value)
+	c.setField(c.InstanceFieldsIndex, value)
 }
 
-func (c *Class) getInstanceInvokables() *Array {
+func (c *Class) getInstanceInvokables() interface{} {
 	// Get the instance invokables by reading the field with the instance invokables index
-	return c.getField(instanceInvokablesIndex)
+	return c.getField(c.InstanceInvokablesIndex)
 }
 
-func (c *Class) setInstanceInvokables(value Array) {
+func (c *Class) setInstanceInvokables(value interface{}) {
 	// Set the instance invokables by writing to the field with the instance invokables index
-	setField(instanceInvokablesIndex, value)
+	c.setField(c.InstanceInvokablesIndex, value)
 
 	// Make sure this class is the holder of all invokables in the array
-	for i := 0; i < getNumberOfInstanceInvokables(); i++ {
-		getInstanceInvokable(i).setHolder(this)
+	for i := 0; i < c.getNumberOfInstanceInvokables(); i++ {
+		c.getInstanceInvokable(i).setHolder(c)
 	}
 }
 
 func (c *Class) getNumberOfInstanceInvokables() int {
 	// Return the number of instance invokables in this class
-	return c.getInstanceInvokables().getNumberOfIndexableFields()
+	return len(c.InvokablesTable)
 }
 
-func (c *Class) getInstanceInvokable(index int) *Invokable {
+func (c *Class) getInstanceInvokable(index int) Invokable {
 	// Get the instance invokable with the given index
 	return c.getInstanceInvokables().getIndexableField(index)
 }
@@ -107,7 +127,7 @@ func (c *Class) getDefaultNumberOfFields() int {
 	return c.NumberOfClassFields
 }
 
-func (c *Class) lookupInvokable(signature *Symbol) *Invokable {
+func (c *Class) lookupInvokable(signature *Symbol) Invokable {
 
 	// Lookup invokable and return if found
 	invokable := c.InvokablesTable[signature]
@@ -121,26 +141,27 @@ func (c *Class) lookupInvokable(signature *Symbol) *Invokable {
 		invokable = c.getInstanceInvokable(i)
 
 		// Return the invokable if the signature matches
-		if invokable.getSignature() == signature {
-			c.InvokablesTable.put(signature, invokable)
+		if invokable.GetSignature() == signature {
+			c.InvokablesTable[signature] = invokable
 			return invokable
 		}
 	}
 
 	// Traverse the super class chain by calling lookup on the super class
-	if hasSuperClass() {
-		invokable = c.getSuperClass().lookupInvokable(signature)
-		if invokable != null {
-			c.InvokablesTable.put(signature, invokable)
+	if c.hasSuperClass() {
+		superc, _ := c.getSuperClass().(Class)
+		invokable = superc.lookupInvokable(signature)
+		if invokable != nil {
+			c.InvokablesTable[signature] = invokable
 			return invokable
 		}
 	}
 
 	// Invokable not found
-	return null
+	return nil
 }
 
-func (c *Class) lookupFieldIndex(fieldName Symbol) int {
+func (c *Class) lookupFieldIndex(fieldName *Symbol) int {
 	// Lookup field with given name in array of instance fields
 	for i := c.getNumberOfInstanceFields() - 1; i >= 0; i-- {
 		// Return the current index if the name matches
@@ -171,14 +192,14 @@ func (c *Class) addInstanceInvokable(value Invokable) bool {
 	return true
 }
 
-func (c *Class) addInstancePrimitive(value Primitive) {
+func (c *Class) addInstancePrimitive(value *Primitive) {
 	if c.addInstanceInvokable(value) {
-		System.out.print("Warning: Primitive " + value.getSignature().getString())
-		System.out.println(" is not in class definition for class " + getName().getString())
+		fmt.println("Warning: Primitive " + value.getSignature().String())
+		fmt.println(" is not in class definition for class " + c.getName().String())
 	}
 }
 
-func (c *Class) getInstanceFieldName(index int) *Object {
+func (c *Class) getInstanceFieldName(index int) *Symbol {
 	// Get the name of the instance field with the given index
 	if index >= c.getNumberOfSuperInstanceFields() {
 		// Adjust the index to account for fields defined in the super class
@@ -251,7 +272,7 @@ func (c *Class) loadPrimitives() {
 }
 
 func (c *Class) replaceBytecodes() {
-	fmt.Println("Class replaceBytecides, off by one bug!")
+	fmt.Println("Class replaceBytecodes, off by one bug!")
 	cnt := c.getNumberOfInstanceInvokables()
 	for index := 0; index < cnt; index++ { // no pre-increment in Go
 		inv := c.getInstanceInvokable(index)

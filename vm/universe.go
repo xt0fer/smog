@@ -5,7 +5,7 @@ import (
 )
 
 type Universe struct {
-	Globals map[*Symbol]*Object
+	Globals     map[*Symbol]*Object
 	symboltable *SymbolTable
 	//
 	PathSep string
@@ -33,14 +33,27 @@ type Universe struct {
 }
 
 var instantiated *Universe
+var interpreter *Interpreter
+
 var once sync.Once
 
 func GetUniverse() *Universe {
 	once.Do(func() {
 		instantiated = &Universe{}
 		instantiated.initUniverse()
+		interpreter = &Interpreter{}
 	})
 	return instantiated
+}
+
+func GetIntp() *Interpreter {
+	once.Do(func() {
+		instantiated = &Universe{}
+		instantiated.initUniverse()
+		interpreter = &Interpreter{}
+	})
+	return interpreter
+
 }
 
 func (u *Universe) initUniverse() {
@@ -61,8 +74,8 @@ func (u *Universe) symbolFor(sym string) *Symbol {
 }
 
 func (u *Universe) newSymbol(sym string) *Symbol {
-	result := NewSymbol(sym, 1)
-	result.setClass(*u.SymbolClass)
+	result := NewSymbol(sym)
+	result.setClass(u.SymbolClass)
 	u.symboltable.insert(result)
 	return result
 }

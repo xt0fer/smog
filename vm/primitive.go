@@ -26,10 +26,10 @@ func NewPrimitive(signatureString string) {
 }
 
 func (p *Primitive) getSignature() *Symbol {
-	return p.getField(p.SignatureIndex)
+	return p.Fields[p.SignatureIndex]
 }
 func (p *Primitive) setSignature(value *Symbol) {
-	p.Fields[p.SignatureIndex] = value
+	p.Fields[p.SignatureIndex] = Object(*value)
 }
 
 func (p *Primitive) getHolder() *Object {

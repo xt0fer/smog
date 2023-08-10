@@ -1,8 +1,17 @@
 package vm
 
+type IsArray interface {
+getIndexableField(index int) interface{};
+setIndexableField(index int, value interface{});
+getNumberOfIndexableFields() int;
+setNumberOfIndexableFields(value int);
+copyAndExtendWith(value IsObject) IsArray;
+copyIndexableFieldsTo(destination IsArray);
+}
+
 type Array struct {
 	Object
-	IndexableFields []*Object
+	IndexableFields []interface{}
 }
 
 // func NewArray() *Array {
@@ -11,20 +20,25 @@ type Array struct {
 
 func NewArray(n int) *Array {
 	a := &Array{}
-	a.IndexableFields = make([]*Object, n)
+	a.Object.ObjectInit("",2)
+	a.ArrayInit(n)
 	return a
+}
+
+func (a *Array) ArrayInit(n int) {
+	a.IndexableFields = make([]interface{}, n)
 }
 
 // frame is a subtype of array
 
-func (a *Array) getIndexableField(index int) *Object {
+func (a *Array) getIndexableField(index int) interface{} {
 	// Get the indexable field with the given index
 	return a.IndexableFields[index]
 }
 
-func (a *Array) setIndexableField(index int, value *Object) {
+func (a *Array) setIndexableField(index int, value interface{}) {
 	// Set the indexable field with the given index to the given value
-	a.IndexableFields[index] = value
+	a.IndexableFields[index] = &value
 }
 
 func (a *Array) getNumberOfIndexableFields() int {
@@ -34,7 +48,7 @@ func (a *Array) getNumberOfIndexableFields() int {
 
 func (a *Array) setNumberOfIndexableFields(value int) {
 	// Allocate a new array of indexable fields
-	a.IndexableFields = make([]*Object, value) //new Object[value];
+	a.IndexableFields = make([]interface{}, value) //new Object[value];
 
 	// Clear each and every field by putting nil into them
 	for i := 0; i < a.getNumberOfIndexableFields(); i++ {

@@ -1,23 +1,38 @@
 package vm
 
-import "github.com/xt0fer/smog/interpreter"
+type IsObject interface {
+	getSOMClass() *Class
+	setClass(c *Class)
+	getFieldName(index int) *Symbol
+	getField(index int) *Object
+	setField(index int, value *Object)
+	getFieldIndex(name *Symbol)
+	getNumberOfFields() int
+	setNumberOfFields(value int)
+	getDefaultNumberOfFields() int
+	send(selectorStr string, arguments []*Object)
+}
 
 type Object struct {
 	ClassIndex           int
 	SOMClass             *Class
 	NumberOfObjectFields int
-	Fields               []*Object
+	Fields               []interface{}
 }
 
-func NewObject(name string, args int) *Object {
+func NewObject(name string, fields int) *Object {
 	ns := &Object{}
-	if args == -1 {
+	ns.ObjectInit(name,fields)
+	return ns
+}
+
+func (ns *Object) ObjectInit(name string, fields int) {
+	if fields == -1 {
 		ns.NumberOfObjectFields = ns.getDefaultNumberOfFields()
 	} else {
-		ns.NumberOfObjectFields = args
+		ns.NumberOfObjectFields = fields
 	}
-	ns.Fields = make([]*Object, ns.NumberOfObjectFields)
-	return ns
+	ns.Fields = make([]interface{}, ns.NumberOfObjectFields)
 }
 
 func (o *Object) getSOMClass() *Class {
@@ -30,10 +45,10 @@ func (o *Object) setClass(c *Class) {
 
 func (o *Object) getFieldName(index int) *Symbol {
 	// Get the name of the field with the given index
-	return o.SOMClass.getInstanceFieldName(index)
+	return o.getSOMClass().getInstanceFieldName(index)
 }
 
-func (o *Object) getFieldIndex(name Symbol) {
+func (o *Object) getFieldIndex(name *Symbol) int {
 	// Get the index for the field with the given name
 	return o.getSOMClass().lookupFieldIndex(name)
 }
@@ -45,7 +60,7 @@ func (o *Object) getNumberOfFields() int {
 
 func (o *Object) setNumberOfFields(value int) {
 	// Allocate a new array of fields
-	o.Fields = make([]*Object, value)
+	o.Fields = make([]interface{}, value)
 
 	// Clear each and every field by putting nil into them
 	for i := 0; i < o.getNumberOfFields(); i++ {
@@ -58,11 +73,12 @@ func (o *Object) getDefaultNumberOfFields() int {
 	return o.NumberOfObjectFields
 }
 
-func (o *Object) send(interpreter interpreter.Interpreter, selectorStr string, arguments []*Object) {
+func (o *Object) send(selectorStr string, arguments []*Object) {
 	// Turn the selector string into a selector
 	selector := GetUniverse().symbolFor(selectorStr)
 
 	// Push the receiver onto the stack
+	interpreter := GetUniverse().GetIntp()
 	interpreter.getFrame().push(o)
 
 	// Push the arguments onto the stack
@@ -73,19 +89,19 @@ func (o *Object) send(interpreter interpreter.Interpreter, selectorStr string, a
 	invokable := o.getSOMClass().lookupInvokable(selector)
 
 	// Invoke the invokable
-	invokable.invoke(interpreter.getFrame())
+	invokable.Invoke(interpreter.getFrame())
 }
 
-func (o *Object) getField(index int) *Object {
+func (o *Object) getField(index int) interface{} {
 	// Get the field with the given index
 	return o.Fields[index]
 }
 
-func (o *Object) setField(index int, value *Object) {
+func (o *Object) setField(index int, value interface{}) {
 	// Set the field with the given index to the given value
 	o.Fields[index] = value
 }
 
-// func (o *Object) _assert(boolean value) {
+// func (o IsObject) _assert(boolean value) {
 // 	GetUniverse()._assert(value)
 // }

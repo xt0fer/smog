@@ -7,13 +7,23 @@
 
 import Foundation
 
+protocol Invokable {
+    var simpleDescription: String { get }
+    mutating func adjust()
+}
+
 class SClass: SObject {
     
     var universe: Universe
-    var superClass: SClass
-    var name: SSymbol
-    var instanceInvokables: Invokable
-    var instanceFields: [SObject]
+    var superClass: SClass?
+    var name: SSymbol?
+    var instanceInvokables: SArray?
+    var instanceFields: [SObject?]
+
+    init(_ u: Universe) {
+        super.init(nArgs: 0, clazz: nil)
+        self.universe = u
+    }
 //
 //      new: universe = (
 //        ^ self new initialize: universe

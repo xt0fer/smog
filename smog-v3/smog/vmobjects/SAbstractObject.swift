@@ -7,8 +7,11 @@
 
 import Foundation
 
-class AbstractObject {
-    
+class SAbstractObject {
+
+    func send(_ selectorString: String, withArguments: [SObject], in: Universe, using: Interpreter ) {
+        
+    }
 //send: selectorString with: arguments in: universe using: interpreter = (
 //  | selector invokable |
 //  selector := universe symbolFor: selectorString.
@@ -23,6 +26,7 @@ class AbstractObject {
 //  invokable invoke: interpreter frame using: interpreter
 //)
 //
+    func sendDoesNotUnderstand(_ selector: String, in: Universe, using: Interpreter) {}
 //sendDoesNotUnderstand: selector in: universe using: interpreter = (
 //  | numberOfArguments frame argumentsArray args |
 //  numberOfArguments := selector numberOfSignatureArguments.
@@ -44,12 +48,16 @@ class AbstractObject {
 //  self send: 'doesNotUnderstand:arguments:' with: args in: universe using: interpreter
 //)
 //
+    func sendUnknownGlobal(_ globalName: String, in: Universe, using: Interpreter) {}
+
 //sendUnknownGlobal: globalName in: universe using: interpreter = (
 //  | arguments |
 //  arguments := Array with: globalName.
 //  self send: 'unknownGlobal:' with: arguments in: universe using: interpreter
 //)
 //
+    func sendEscapedBlock(_ block: SBlock, in: Universe, using: Interpreter) {}
+
 //sendEscapedBlock: block in: universe using: interpreter = (
 //  | arguments |
 //  arguments := Array with: block.

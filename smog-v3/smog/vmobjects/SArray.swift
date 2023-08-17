@@ -16,11 +16,12 @@ class SArray: SObject {
 
 //SArray = SAbstractObject (
 //  | indexableFields |
+var indexableFields: [SAbstractObject] = []
 //
 //  initializeWith: length and: nilObject = (
 //    indexableFields := Array new: length withAll: nilObject.
 //  )
-func initializeWith(_ length: Int and: Universe.shared.nilObject) {
+func initializeWith(_ length: Int, and: Universe.shared.nilObject) {
     
 }
 //

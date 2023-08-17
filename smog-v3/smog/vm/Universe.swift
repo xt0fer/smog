@@ -8,15 +8,17 @@
 import Foundation
 
 class Universe {
-    static let shared = Universe()
+    static let shared: Universe = {
+        let instance = Universe()
+        // setup code
+        return instance
+    }()
     
     init(){
-        self.stringClass = SClass(self)
     }
 
     
 
-    var stringClass: SClass
     
 //    symbolTable
 //    globals
@@ -28,7 +30,7 @@ var        avoidExit = false
 //        lastExitCode
 //        exitBlock
 //
-    var        nilObject = SObject()
+    var        nilObject = SObject(nArgs: 0, clazz: SClass(Universe.shared))
 //        trueObject
 //        falseObject
 //
@@ -42,7 +44,7 @@ var        avoidExit = false
 //        methodClass
 //        symbolClass
 //        primClass
-//        stringClass
+var       stringClass = SObject(nArgs: 0, clazz: SClass(Universe.shared))
 //        systemClass
 //        blockClass
 //        doubleClass

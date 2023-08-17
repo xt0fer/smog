@@ -8,7 +8,7 @@
 import Foundation
 
 
-class SObject: AbstractObject {
+class SObject: SAbstractObject {
     var fields: [SObject?] = []
     var clazz: SClass?
     

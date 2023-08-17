@@ -10,12 +10,19 @@ import Foundation
 class SArray: SObject {
 }
 
+//  new: length with: nilObject = (
+//    ^ self new initializeWith: length and: nilObject
+//  )
+
 //SArray = SAbstractObject (
 //  | indexableFields |
 //
 //  initializeWith: length and: nilObject = (
 //    indexableFields := Array new: length withAll: nilObject.
 //  )
+func initializeWith(_ length: Int and: Universe.shared.nilObject) {
+    
+}
 //
 //  somClassIn: universe = (
 //    ^ universe arrayClass
@@ -60,7 +67,4 @@ class SArray: SObject {
 //
 //  ----
 //
-//  new: length with: nilObject = (
-//    ^ self new initializeWith: length and: nilObject
-//  )
 //)

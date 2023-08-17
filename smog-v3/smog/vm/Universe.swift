@@ -7,21 +7,28 @@
 
 import Foundation
 
-struct Universe {
+class Universe {
+    static let shared = Universe()
     
-    var stringClass: SClass?
+    init(){
+        self.stringClass = SClass(self)
+    }
+
+    
+
+    var stringClass: SClass
     
 //    symbolTable
 //    globals
 //    classPath
-//    dumpBytecodes
+var    dumpBytecodes = false
 //    interpreter
 //
-//        avoidExit
+var        avoidExit = false
 //        lastExitCode
 //        exitBlock
 //
-//        nilObject
+    var        nilObject = SObject()
 //        trueObject
 //        falseObject
 //
@@ -42,10 +49,6 @@ struct Universe {
 //
 //        trueClass
 //        falseClass
-    
-    init() {
-        self.stringClass = SClass(self)
-    }
     
     func interpret(_ args: ArraySlice<String>) {
         

@@ -9,16 +9,11 @@ import Foundation
 
 class SClass: SObject {
     
-//    SClass = SObject (
-//      | universe
-//        superClass
-//        name
-//        instanceInvokables
-//        instanceFields
-//      |
-//
-    
-//      ----
+    var universe: Universe
+    var superClass: SClass
+    var name: SSymbol
+    var instanceInvokables: Invokable
+    var instanceFields: [SObject]
 //
 //      new: universe = (
 //        ^ self new initialize: universe

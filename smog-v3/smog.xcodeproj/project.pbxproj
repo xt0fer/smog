@@ -11,6 +11,9 @@
 		5C9599CF2A8E9ED100B5818A /* SObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C9599CE2A8E9ED100B5818A /* SObject.swift */; };
 		5C9599D32A8E9F3000B5818A /* AbstractObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C9599D22A8E9F3000B5818A /* AbstractObject.swift */; };
 		5C9599D52A8EA1F600B5818A /* SClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C9599D42A8EA1F600B5818A /* SClass.swift */; };
+		5C9599D72A8EA47900B5818A /* Universe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C9599D62A8EA47900B5818A /* Universe.swift */; };
+		5C9599D92A8EA49500B5818A /* SSymbol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C9599D82A8EA49500B5818A /* SSymbol.swift */; };
+		5C9599DB2A8EA4AD00B5818A /* SString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C9599DA2A8EA4AD00B5818A /* SString.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -31,6 +34,9 @@
 		5C9599CE2A8E9ED100B5818A /* SObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SObject.swift; sourceTree = "<group>"; };
 		5C9599D22A8E9F3000B5818A /* AbstractObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AbstractObject.swift; sourceTree = "<group>"; };
 		5C9599D42A8EA1F600B5818A /* SClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SClass.swift; sourceTree = "<group>"; };
+		5C9599D62A8EA47900B5818A /* Universe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Universe.swift; sourceTree = "<group>"; };
+		5C9599D82A8EA49500B5818A /* SSymbol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSymbol.swift; sourceTree = "<group>"; };
+		5C9599DA2A8EA4AD00B5818A /* SString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SString.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -73,6 +79,7 @@
 		5C9599D02A8E9F0F00B5818A /* vm */ = {
 			isa = PBXGroup;
 			children = (
+				5C9599D62A8EA47900B5818A /* Universe.swift */,
 			);
 			path = vm;
 			sourceTree = "<group>";
@@ -82,6 +89,8 @@
 			children = (
 				5C9599CE2A8E9ED100B5818A /* SObject.swift */,
 				5C9599D42A8EA1F600B5818A /* SClass.swift */,
+				5C9599D82A8EA49500B5818A /* SSymbol.swift */,
+				5C9599DA2A8EA4AD00B5818A /* SString.swift */,
 				5C9599D22A8E9F3000B5818A /* AbstractObject.swift */,
 			);
 			path = vmobjects;
@@ -147,8 +156,11 @@
 			files = (
 				5C9599D52A8EA1F600B5818A /* SClass.swift in Sources */,
 				5C9599C82A8E9E2400B5818A /* main.swift in Sources */,
+				5C9599D72A8EA47900B5818A /* Universe.swift in Sources */,
 				5C9599D32A8E9F3000B5818A /* AbstractObject.swift in Sources */,
 				5C9599CF2A8E9ED100B5818A /* SObject.swift in Sources */,
+				5C9599D92A8EA49500B5818A /* SSymbol.swift in Sources */,
+				5C9599DB2A8EA4AD00B5818A /* SString.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

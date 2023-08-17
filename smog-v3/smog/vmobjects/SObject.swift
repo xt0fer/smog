@@ -8,66 +8,41 @@
 import Foundation
 
 class SObject: AbstractObject {
-    var fields: [AbstractObject] = []
+    var fields: [AbstractObject?] = []
     var clazz: SClass
     
-    init(nArgs: int, clazz: SClass) {
-        self.fields = []
+    init(nArgs: Int, clazz: SClass) {
+        self.fields = Array(repeating: nil, count: nArgs)
         self.clazz = clazz
     }
     
-//    SObject = SAbstractObject (
-//      | fields clazz |
-//
-//      initialize: numberOfFields with: nilObject = (
-//        fields := Array new: numberOfFields withAll: nilObject
-//      )
-//
-//      somClass = (
-//        ^ clazz
-//      )
-//
-//      somClass: aSClass = (
-//        clazz := aSClass
-//      )
-//
-//      somClassIn: universe = (
-//        ^ clazz
-//      )
-//
-//      fieldName: index = (
-//        "Get the name of the field with the given index"
-//        ^ clazz instanceFieldName: index
-//      )
-//
-//      fieldIndex: name = (
-//        "Get the index for the field with the given name"
-//        ^ clazz lookupFieldIndex: name
-//      )
-//
-//      numberOfFields = (
-//        "Get the number of fields in this object"
-//        ^ fields length
-//      )
-//
-//      field: index = (
-//        "Get the field with the given index"
-//        ^ fields at: index
-//      )
-//
-//      field: index put: value = (
-//        "Set the field with the given index to the given value"
-//        fields at: index put: value
-//      )
-//
-//      "For using in debugging tools such as the Diassembler"
-//      debugString = ( ^ 'SObject(' + clazz name string + ')' )
-//
-//      ----
-//
-//      new: numberOfFields with: nilObject = (
-//        ^ self new initialize: numberOfFields with: nilObject
-//      )
-//    )
+    func somClass() -> SClass {
+        return self.clazz
+    }
 
+    func somClass(aSClass: SClass) {
+        self.clazz = aSClass
+    }
+    func somClassIn(_ u: Universe) -> SClass {
+        return self.clazz
+    }
+
+    func fieldName(index: Int) -> SString {
+        return self.clazz.instanceFieldName(index)
+    }
+    func fieldIndex(name: SString) -> Int {
+        return self.clazz.lookupFieldIndex(name)
+    }
+    func numberOfFields() -> Int {
+        return fields.count
+    }
+    func field(index: Int) -> SObject {
+        return self.fields[index]
+    }
+    func fieldAt(_ index: Int, put: SObject) {
+        self.fields[index] = put
+    }
+    func debugString() -> String {
+        return "SObject(\(self.clazz.name))"
+    }
 }

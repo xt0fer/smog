@@ -7,7 +7,14 @@
 
 import Foundation
 
-class Object: AbstractObject {
+class SObject: AbstractObject {
+    var fields: [AbstractObject] = []
+    var clazz: SClass
+    
+    init(nArgs: int, clazz: SClass) {
+        self.fields = []
+        self.clazz = clazz
+    }
     
 //    SObject = SAbstractObject (
 //      | fields clazz |

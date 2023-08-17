@@ -1,0 +1,17 @@
+SymbolPrimitives = Primitives (
+
+  installPrimitives = (
+    self installInstancePrimitive: (
+      SPrimitive new: 'asString' in: universe with: [:frame :interp |
+        | rcvr |
+        rcvr := frame pop.
+
+        frame push: (universe newString: rcvr string) ]).
+  )
+
+  ----
+
+  new: universe = (
+    ^ self new initialize: universe
+  )
+)

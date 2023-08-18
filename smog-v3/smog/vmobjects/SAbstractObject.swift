@@ -7,7 +7,34 @@
 
 import Foundation
 
-class SAbstractObject {
+protocol Invokable {
+//    var count: Int { get }
+//    mutating func push(_ element: Int)
+//    mutating func pop() -> Int
+//    mutating func invoke()
+    
+    func IsPrimitive() -> Bool
+    func Invoke(frame: Frame)
+    func GetSignature() -> SSymbol
+    func GetHolder() -> SClass
+    mutating func SetHolder(value: SClass)
+
+}
+
+class SAbstractObject: Identifiable, Hashable {
+    var identifier: String {
+        return UUID().uuidString
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        return hasher.combine(identifier)
+    }
+    
+    public static func == (lhs: SAbstractObject, rhs: SAbstractObject) -> Bool {
+        return lhs.identifier == rhs.identifier
+    }
+    
+    init() {}
 
     func send(_ selectorString: String, withArguments: [SObject], in: Universe, using: Interpreter ) {
         
@@ -64,5 +91,11 @@ class SAbstractObject {
 //  self send: 'escapedBlock:' with: arguments in: universe using: interpreter
 //)
 //)
+
+    func IsPrimitive() -> Bool { return false }
+    func Invoke(frame: Frame) {}
+    func GetSignature() -> SSymbol { return SSymbol(s: "nop")}
+    func GetHolder() -> SClass { return Universe.shared.nilClass }
+    func SetHolder(value: SClass) {}
 
 }

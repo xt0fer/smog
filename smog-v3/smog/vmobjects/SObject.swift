@@ -12,11 +12,14 @@ class SObject: SAbstractObject {
     var fields: [SObject?] = []
     var clazz: SClass?
     
+    convenience override init() {
+        self.init(nArgs: 0, clazz: Universe.shared.objectClass)
+    }
     init(nArgs: Int, clazz: SClass?) {
         self.fields = Array(repeating: nil, count: nArgs)
         self.clazz = clazz
     }
-    
+
     func somClass() -> SClass {
         return self.clazz!
     }

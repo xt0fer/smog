@@ -7,22 +7,31 @@
 
 import Foundation
 
-protocol Invokable {
-    var simpleDescription: String { get }
-    mutating func adjust()
-}
-
 class SClass: SObject {
     
     var universe: Universe
     var superClass: SClass?
     var name: SSymbol?
-    var instanceInvokables: SArray = SArray()
+    var _instanceInvokables: SArray = SArray()
+    var instanceInvokables: SArray {
+        get{
+            return _instanceInvokables
+        }
+        set {
+            _instanceInvokables = newValue
+            // do a loop to init to nil
+        }
+    }
     var instanceFields: [SObject] = []
 
     init(_ u: Universe) {
         self.universe = u
         super.init(nArgs: 0, clazz: nil)
+    }
+
+    init(_ numberOfFields: Int, u: Universe) {
+        self.universe = u
+        super.init(nArgs: numberOfFields, clazz: nil)
     }
 
 //      new: universe = {
@@ -46,6 +55,9 @@ class SClass: SObject {
 //      superClass = {
 //        ^ superClass
 //      }
+//    func superClass() -> SClass {
+//        return self.clazz!
+//    }
 
 //      superClass: aSClass = {
 //        superClass := aSClass
@@ -54,6 +66,9 @@ class SClass: SObject {
 //      hasSuperClass = {
 //        ^ superClass ~= universe nilObject
 //      }
+        func hasSuperClass() -> Bool {
+            return self.superClass != Universe.shared.nilObject
+        }
 
 //      name = {
 //        ^ name
@@ -82,14 +97,20 @@ class SClass: SObject {
 //        1 to: self numberOfInstanceInvokables do: [:i |
 //          (instanceInvokables indexableField: i) holder: self ]
 //      }
+    // SEE the variable SET leg.
 
 //      numberOfInstanceInvokables = {
 //        ^ instanceInvokables numberOfIndexableFields
 //      }
-
+    func numberOfInstanceInvokables() -> Int {
+        return self._instanceInvokables.fields.count
+    }
 //      instanceInvokable: idx = {
 //        ^ instanceInvokables indexableField: idx
 //      }
+    func instanceInvokable(index: Int) -> Invokable {
+        return self._instanceInvokables.indexableFields[index] as! Invokable
+    }
 
 //      instanceInvokable: idx put: aSInvokable = {
 //        aSInvokable holder: self.
@@ -177,12 +198,21 @@ class SClass: SObject {
 //        "Get the total number of instance fields in this class"
 //        ^ instanceFields numberOfIndexableFields + self numberOfSuperInstanceFields
 //      }
+    func numberOfInstanceFields() -> Int {
+        return self.instanceFields.count
+    }
 
 //      numberOfSuperInstanceFields = {
 //        self hasSuperClass
 //          ifTrue: [ ^ self superClass numberOfInstanceFields ]
 //          ifFalse: [ ^ 0 ]
 //      }
+    func numberOfSuperInstanceFields() -> Int {
+        if self.hasSuperClass() {
+            return self.superClass!.numberOfInstanceFields()
+        }
+        return 0
+    }
 
 //      hasPrimitives = {
 //        "Lookup invokable with given signature in array of instance invokables"

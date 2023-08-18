@@ -7,7 +7,13 @@
 
 import Foundation
 
-class Double: SObject {}
+class SDouble: SAbstractObject {
+    
+    var wrappedValue: Float
+    init(d: Float) {
+        self.wrappedValue = d
+        super.init()
+    }
 
 //SDouble = SAbstractObject (
 //  | value |
@@ -17,10 +23,16 @@ class Double: SObject {}
 //  )
 //
 //  double = ( ^ value )
+    func double() -> Float {
+        return self.wrappedValue
+    }
 //
 //  somClassIn: universe = (
 //    ^ universe doubleClass
 //  )
+    func somClassIn(_ u: Universe) -> SClass {
+        return u.doubleClass
+    }
 //
 //  "For using in debugging tools such as the Diassembler"
 //  debugString = ( ^ 'SDouble(' + value asString + ')' )
@@ -30,4 +42,8 @@ class Double: SObject {}
 //  for: aDouble = (
 //    ^ self new initialize: aDouble
 //  )
+    func newFor() -> SDouble {
+        return SDouble(d: self.wrappedValue)
+    }
+}
 //)

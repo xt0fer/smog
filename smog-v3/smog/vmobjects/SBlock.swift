@@ -7,7 +7,7 @@
 
 import Foundation
 
-class SBlock: SObject {}
+class SBlock: SAbstractObject {}
 
 //SBlock = SAbstractObject (
 //  | method context blockClass |

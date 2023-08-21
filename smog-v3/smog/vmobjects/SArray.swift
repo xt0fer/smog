@@ -13,6 +13,10 @@ class SArray: SObject {
     //  new: length with: nilObject = (
     //    ^ self new initializeWith: length and: nilObject
     //  )
+    init(size: Int, with: SObject) {
+        self.indexableFields = Array(repeating: with, count: size)
+        super.init()
+    }
     
     //SArray = SAbstractObject (
     //  | indexableFields |
@@ -32,6 +36,9 @@ class SArray: SObject {
     //  indexableField: idx = (
     //    ^ indexableFields at: idx
     //  )
+    func indexableField(idx: Int) -> SAbstractObject{
+        return self.indexableFields[idx]
+    }
     //
     //  indexableField: idx put: val = (
     //    ^ indexableFields at: idx put: val
@@ -56,11 +63,22 @@ class SArray: SObject {
     //    result indexableField: newLength put: value.
     //    ^ result
     //  )
+    func copyAndExtendWith(value: SObject, in u: Universe) {
+        let newSize = self.indexableFields.count+1
+        let result = u.newArray(newSize)
+        self.copyIndexableFieldsTo(destination: result)
+        result.inindexableFields[newSize] = value
+    }
     //
     //  copyIndexableFieldsTo: destination = (
     //    indexableFields doIndexes: [:i |
     //      destination indexableField: i put: (indexableFields at: i) ]
     //  )
+    func copyIndexableFieldsTo(destination: SArray) {
+        for (idx, field) in self.indexableFields.enumerated() {
+            destination.indexableFields[idx] = field
+        }
+    }
     //
     //  "For using in debugging tools such as the Diassembler"
     //  debugString = (

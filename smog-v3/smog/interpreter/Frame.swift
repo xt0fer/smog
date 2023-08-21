@@ -7,7 +7,41 @@
 
 import Foundation
 
-class Frame {}
+class Frame {
+    
+    //  "Points at the top element"
+    var stackPointer = 0
+    var bytecodeIndex = 0
+    //
+    //  "the offset at which local variables start"
+    var localOffset = 0
+    
+    var method: SMethod
+    var contextFrame: Frame
+    var previousFrame: Frame
+    var stack: SArray
+    
+    //|
+    //  initialize: nilObject previous: prevFrame context: contextFrame method: aSMethod maxStack: stackElements = (
+    //    previousFrame := prevFrame.
+    //    context := contextFrame.
+    //    method := aSMethod.
+    //    stack := Array new: stackElements withAll: nilObject.
+    //
+    //    "Reset the stack pointer and the bytecode index"
+    //    self resetStackPointer.
+    //    bytecodeIndex := 1.
+    //  )
+    init(with: SObject, previousFrame: Frame, contextFrame: Frame, method: SMethod, maxStack: Int) {
+        self.previousFrame = previousFrame
+        self.contextFrame = contextFrame
+        self.method = method
+        self.stack = SArray(size: maxStack, with: with) // prob nilObject
+        self.resetStackPointer()
+        self.bytecodeIndex = 1
+    }
+
+    // TODO: Lots to do in Frame
 
 //Frame = (
 //"
@@ -22,28 +56,6 @@ class Frame {}
 //+-----------------+
 //"
 //|
-//  "Points at the top element"
-//  stackPointer
-//  bytecodeIndex
-//
-//  "the offset at which local variables start"
-//  localOffset
-//
-//  method
-//  context
-//  previousFrame
-//  stack
-//|
-//  initialize: nilObject previous: prevFrame context: contextFrame method: aSMethod maxStack: stackElements = (
-//    previousFrame := prevFrame.
-//    context := contextFrame.
-//    method := aSMethod.
-//    stack := Array new: stackElements withAll: nilObject.
-//
-//    "Reset the stack pointer and the bytecode index"
-//    self resetStackPointer.
-//    bytecodeIndex := 1.
-//  )
 //
 //  previousFrame = (
 //    ^ previousFrame
@@ -124,6 +136,10 @@ class Frame {}
 //    "Set the stack pointer to its initial value thereby clearing the stack"
 //    stackPointer := localOffset + method numberOfLocals - 1
 //  )
+func resetStackPointer() {
+    self.localOffset = self.method.numberOfArguments() + 1
+    self.stackPointer = self.localOffset + method.numberOfLocals - 1
+}
 //
 //  bytecodeIndex = (
 //    "Get the current bytecode index for this frame"
@@ -218,3 +234,4 @@ class Frame {}
 //    ^ self new initialize: nilObject previous: prevFrame context: contextFrame method: aSMethod maxStack: stackElements
 //  )
 //)
+}

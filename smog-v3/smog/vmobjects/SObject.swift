@@ -9,7 +9,7 @@ import Foundation
 
 
 class SObject: SAbstractObject {
-    var fields: [SObject?] = []
+    var fields: [SObject] = []
     var clazz: SClass
 
     convenience override init() {
@@ -17,7 +17,7 @@ class SObject: SAbstractObject {
     }
     
     init(nArgs: Int, clazz: SClass) {
-        self.fields = Array(repeating: nil, count: nArgs)
+        self.fields = Array(repeating: Universe.shared.nilObject, count: nArgs)
         self.clazz = clazz
     }
 
@@ -33,7 +33,7 @@ class SObject: SAbstractObject {
     }
 
     func fieldName(index: Int) -> SString {
-        return self.clazz.instanceFieldName(index)
+        return self.clazz.instanceFieldName(index: index)
     }
     func fieldIndex(name: SString) -> Int {
         return self.clazz.lookupFieldIndex(name)
@@ -42,7 +42,7 @@ class SObject: SAbstractObject {
         return fields.count
     }
     func field(index: Int) -> SObject {
-        return self.fields[index]!
+        return self.fields[index]
     }
     func fieldAt(_ index: Int, put: SObject) {
         self.fields[index] = put

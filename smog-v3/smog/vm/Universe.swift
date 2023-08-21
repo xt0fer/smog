@@ -357,6 +357,9 @@ class Universe {
     //    newArray: size = (
     //      ^ SArray new: size with: nilObject
     //    )
+    func newArray(size: Int) -> SArray {
+        return SArray(size: size, with: nilObject)
+    }
     
     //    newArrayFromStrings: strArray = (
     //      | sArr |
@@ -382,6 +385,9 @@ class Universe {
     //    newBlock: method with: context numArgs: arguments = (
     //      ^ SBlock new: method in: context with: (self blockClass: arguments)
     //    )
+    func newBlock(method: SMethod, with: Frame, numArgs: Int ) -> SBlock {
+        return SBlock(aSMethod: method, aContext: with, aBlockClass: self.blockClass(numOfArgs: numArgs))
+    }
     
     //    newClass: classClass = (
     //      | result |
@@ -392,6 +398,11 @@ class Universe {
     //      "Return the freshly allocated class"
     //      ^ result
     //    )
+    func newClass(someClass: SClass) -> SClass {
+        let result = SClass(someClass.numberOfFields(), u: self)
+        result.somClass(aSClass: someClass)
+        return result
+    }
     
     //    newFrame: previousFrame with: method with: contextFrame = (
     //      | length result |
@@ -407,6 +418,16 @@ class Universe {
     //      "Return the freshly allocated frame"
     //      ^ result
     //    )
+    func newFrame(previousFrame: Frame, method: SMethod, withContextFrame: Frame) -> Frame {
+        //      "Compute the maximum number of stack locations (including arguments,
+        //       locals and extra buffer to support doesNotUnderstand) and set the number
+        //       of indexable fields accordingly"
+        let length = method.numberOfArguments()
+        + method.numberOfLocals
+        + method.maximumNumberOfStackElements + 2
+        let result = Frame()
+        
+    }
     
     //    newSymbol: aString = (
     //      | result |
@@ -470,6 +491,9 @@ class Universe {
 //    newMethod: aSSymbol bc: bcArray literals: literalsArray numLocals: numLocals maxStack: maxStack = (
 //      ^ SMethod new: aSSymbol bc: bcArray literals: literalsArray numLocals: numLocals maxStack: maxStack
 //    )
+    func newMethod(aSSymbol: SSymbol, bc: [Int], literals: [SString], numLocals: Int, maxStack: Int) {
+        return SMethod(aSSymbol: aSSymbol, bc: bc, literals: literals, numLocals: numLocals, maxStack: maxStack)
+    }
 
 //    newString: aString = (
 //      ^ SString new: aString
@@ -529,16 +553,25 @@ class Universe {
 //      "Global not found"
 //      ^ nil
 //    )
+    func global(symbol: SSymbol) -> SObject {
+        return self.globals[symbol] ?? nilObject
+    }
 
 //    global: aSSymbol put: aSAbstractObject = (
 //      "Insert the given value into the dictionary of globals"
 //      globals at: aSSymbol put: aSAbstractObject
 //    )
+    func global(symbol: SSymbol, put no: SObject ) {
+        self.globals[symbol] = no
+    }
 
 //    hasGlobal: aSSymbol = (
 //      "Returns if the universe has a value for the global of the given name"
 //      ^ globals containsKey: aSSymbol
 //    )
+    func hasGlobal(symbol: SSymbol) -> Bool {
+        return self.globals.index(forKey: symbol) != nil
+    }
 
 //    blockClass: numberOfArguments = (
 //      | name result |
@@ -558,6 +591,13 @@ class Universe {
 //      self global: name put: result.
 //      ^ result
 //    )
+    func blockClass(numOfArgs: Int) -> SClass {
+        let name = self.symbolFor("Block\(numOfArgs)")
+        if self.hasGlobal(symbol: name) {
+            return self.global(symbol: name) as! SClass
+        }
+        
+    }
 
 //    loadClass: name = (
 //      | result |

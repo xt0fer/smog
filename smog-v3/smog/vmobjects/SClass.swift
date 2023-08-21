@@ -22,10 +22,12 @@ class SClass: SObject {
             // do a loop to init to nil
             for (index, value) in _instanceInvokables.indexableFields.enumerated() {
                 _instanceInvokables.indexableFields[index].holder(value: self)
+                invokeCache[value.signature()] = value as! any Invokable
             }
         }
     }
     var instanceFields: [SObject] = []
+    var invokeCache: [SSymbol:Invokable] = [:]
 
     init(_ u: Universe) {
         self.universe = u
@@ -48,6 +50,9 @@ class SClass: SObject {
 //      superClass: aSClass = {
 //        superClass := aSClass
 //      }
+    func superClass(put nc: SClass) {
+        self.superClass = nc
+    }
 
 //      hasSuperClass = {
 //        ^ superClass ~= universe nilObject
@@ -102,6 +107,10 @@ class SClass: SObject {
 //        aSInvokable holder: self.
 //        instanceInvokables indexableField: idx put: aSInvokable
 //      }
+    func instanceInvokable(index: Int, put ni: Invokable) {
+        //ni.holder(value: self)
+        instanceInvokables.indexableField(index, put: ni as! SObject)
+    }
 
 //      lookupInvokable: signature = {
 //        | invokable |
@@ -124,6 +133,10 @@ class SClass: SObject {
 //        "Invokable not found"
 //        ^ nil
 //      }
+    func lookupInvokable(signature: SSymbol) -> Invokable {
+        //        "Lookup invokable with given signature in array of instance invokables"
+        
+    }
 
 //      lookupFieldIndex: fieldName = {
 //        "Lookup field with given name in array of instance fields"
@@ -165,6 +178,9 @@ class SClass: SObject {
 //          Universe println: ' is not in class definition for class ' + name string ]
 //      }
 
+    func instanceFieldName(index: Int) -> SSymbol {
+        
+    }
 //      instanceFieldName: index = {
 //        "Get the name of the instance field with the given index"
 //        index > self numberOfSuperInstanceFields

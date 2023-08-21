@@ -7,7 +7,49 @@
 
 import Foundation
 
-class SBlock: SAbstractObject {}
+class SBlock: SObject {
+    var method: SMethod
+    var context: Frame
+    var blockClass: SClass
+    
+    init(aSMethod: SMethod, aContext: Frame, aBlockClass: SClass) {
+        self.method = aSMethod
+        self.context = aContext
+        self.blockClass = aBlockClass
+        super.init(nArgs: 0, clazz: Universe.shared.blockClass)
+    }
+    
+    // TODO: evaluationPrimitive: numberOfArguments in: universe = (
+    //    ^ SPrimitive new: (self computeSignatureString: numberOfArguments)
+    //                  in: universe
+    //                with: [:frame :interp |
+    //        | rcvr context newFrame |
+    //        "Get the block (the receiver) from the stack"
+    //        rcvr := frame stackElement: numberOfArguments - 1.
+    //
+    //        "Get the context of the block"
+    //        context := rcvr context.
+    //
+    //        "Push a new frame and set its context to be the one specified in
+    //         the block"
+    //        newFrame := interp pushNewFrame: rcvr method with: context.
+    //        newFrame copyArgumentsFrom: frame ]
+    //  )
+
+    // TODO: computeSignatureString: numberOfArguments = (
+    //    | signatureString |
+    //    signatureString := 'value'.
+    //    numberOfArguments > 1 ifTrue: [
+    //      signatureString := signatureString + ':' ].
+    //
+    //    "Add extra with: selector elements if necessary"
+    //    2 to: numberOfArguments - 1 do: [:i |
+    //        signatureString := signatureString + 'with:' ].
+    //
+    //    ^ signatureString
+    //  )
+    
+}
 
 //SBlock = SAbstractObject (
 //  | method context blockClass |

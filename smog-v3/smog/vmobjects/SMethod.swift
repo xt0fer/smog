@@ -30,7 +30,7 @@ class SMethod: SObject {
         return "SMethod(\(String(describing: self.clazz.name)))"
     }
     
-    func isPrimitive() -> Bool { return false }
+    override func isPrimitive() -> Bool { return false }
     
     
     //

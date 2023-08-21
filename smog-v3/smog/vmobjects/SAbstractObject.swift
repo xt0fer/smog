@@ -13,11 +13,11 @@ protocol Invokable {
 //    mutating func pop() -> Int
 //    mutating func invoke()
     
-    func IsPrimitive() -> Bool
-    func Invoke(frame: Frame)
-    func GetSignature() -> SSymbol
-    func GetHolder() -> SClass
-    mutating func SetHolder(value: SClass)
+    func isPrimitive() -> Bool
+    func invoke(frame: Frame)
+    func signature() -> SSymbol
+    func holder() -> SClass
+    mutating func holder(value: SClass)
 
 }
 
@@ -92,10 +92,10 @@ class SAbstractObject: Identifiable, Hashable {
 //)
 //)
 
-    func IsPrimitive() -> Bool { return false }
-    func Invoke(frame: Frame) {}
-    func GetSignature() -> SSymbol { return SSymbol(s: "nop")}
-    func GetHolder() -> SClass { return Universe.shared.nilClass }
-    func SetHolder(value: SClass) {}
+    func isPrimitive() -> Bool { return false }
+    func invoke(frame: Frame) {}
+    func signature() -> SSymbol { return SSymbol(s: "nop")}
+    func holder() -> SClass { return Universe.shared.nilClass }
+    func holder(value: SClass) {}
 
 }

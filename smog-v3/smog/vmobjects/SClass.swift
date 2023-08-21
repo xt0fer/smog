@@ -10,8 +10,8 @@ import Foundation
 class SClass: SObject {
     
     var universe: Universe
-    var superClass: SClass?
-    var name: SSymbol?
+    var superClass: SClass
+    var name: SSymbol
     var _instanceInvokables: SArray = SArray()
     var instanceInvokables: SArray {
         get{
@@ -20,37 +20,23 @@ class SClass: SObject {
         set {
             _instanceInvokables = newValue
             // do a loop to init to nil
+            for (index, value) in _instanceInvokables.indexableFields.enumerated() {
+                _instanceInvokables.indexableFields[index].holder(value: self)
+            }
         }
     }
     var instanceFields: [SObject] = []
 
     init(_ u: Universe) {
         self.universe = u
-        super.init(nArgs: 0, clazz: nil)
+        super.init(nArgs: 0, clazz: u.classClass)
     }
 
     init(_ numberOfFields: Int, u: Universe) {
         self.universe = u
-        super.init(nArgs: numberOfFields, clazz: nil)
+        super.init(nArgs: numberOfFields, clazz: u.classClass)
     }
 
-//      new: universe = {
-//        ^ self new initialize: universe
-//      }
-
-//      new: numberOfFields in: universe = {
-//        ^ self new initialize: numberOfFields in: universe
-//      }
-//    }
-
-//      initialize: aUniverse = {
-//        universe := aUniverse
-//      }
-
-//      initialize: numberOfFields in: aUniverse = {
-//        super initialize: numberOfFields with: aUniverse nilObject.
-//        universe := aUniverse
-//      }
 
 //      superClass = {
 //        ^ superClass

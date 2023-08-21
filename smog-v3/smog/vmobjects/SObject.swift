@@ -10,25 +10,26 @@ import Foundation
 
 class SObject: SAbstractObject {
     var fields: [SObject?] = []
-    var clazz: SClass?
-    
+    var clazz: SClass
+
     convenience override init() {
         self.init(nArgs: 0, clazz: Universe.shared.objectClass)
     }
-    init(nArgs: Int, clazz: SClass?) {
+    
+    init(nArgs: Int, clazz: SClass) {
         self.fields = Array(repeating: nil, count: nArgs)
         self.clazz = clazz
     }
 
     func somClass() -> SClass {
-        return self.clazz!
+        return self.clazz
     }
 
     func somClass(aSClass: SClass) {
         self.clazz = aSClass
     }
     func somClassIn(_ u: Universe) -> SClass {
-        return self.clazz!
+        return self.clazz
     }
 
     func fieldName(index: Int) -> SString {
@@ -47,6 +48,6 @@ class SObject: SAbstractObject {
         self.fields[index] = put
     }
     func debugString() -> String {
-        return "SObject(\(String(describing: self.clazz?.name)))"
+        return "SObject(\(String(describing: self.somClass())))"
     }
 }

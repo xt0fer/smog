@@ -7,7 +7,7 @@
 
 import Foundation
 
-class Frame {
+class Frame: SArray {
     
     //  "Points at the top element"
     var stackPointer = 0
@@ -17,8 +17,8 @@ class Frame {
     var localOffset = 0
     
     var method: SMethod
-    var contextFrame: Frame
-    var previousFrame: Frame
+    var contextFrame: Frame?
+    var previousFrame: Frame?
     var stack: SArray
     
     //|
@@ -37,6 +37,8 @@ class Frame {
         self.contextFrame = contextFrame
         self.method = method
         self.stack = SArray(size: maxStack, with: with) // prob nilObject
+        super.init()
+        
         self.resetStackPointer()
         self.bytecodeIndex = 1
     }
@@ -64,14 +66,23 @@ class Frame {
 //  clearPreviousFrame = (
 //    previousFrame := nil
 //  )
+    func clearPreviousFrame() {
+        self.previousFrame = nil
+    }
 //
 //  hasPreviousFrame = (
 //    ^ previousFrame ~= nil
 //  )
+    func hasPreviousFrame() -> Bool {
+        return self.previousFrame != nil
+    }
 //
 //  isBootstrapFrame = (
 //    ^ self hasPreviousFrame not
 //  )
+    func isBootstrapFrame() -> Bool {
+        return !self.hasPreviousFrame()
+    }
 //
 //  context = (
 //    ^ context
@@ -80,6 +91,10 @@ class Frame {
 //  hasContext = (
 //    ^ context ~= nil
 //  )
+    func hasContext() -> Bool {
+        return self.contextFrame != nil
+    }
+
 //
 //  context: level = (
 //    | frame |

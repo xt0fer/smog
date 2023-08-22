@@ -18,6 +18,10 @@ class SArray: SObject {
         super.init()
     }
     
+    convenience init() {
+        self.init(size: 0, with:  Universe.shared.nilObject)
+    }
+    
     //SArray = SAbstractObject (
     //  | indexableFields |
     var indexableFields: [SAbstractObject] = []

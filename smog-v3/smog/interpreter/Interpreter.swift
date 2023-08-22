@@ -117,8 +117,12 @@ class Interpreter {
         if let frame = self.frame {
             let globalName = frame.method.constant(bcIndex: idx)
             let global = Universe.shared.global(symbol: globalName as! SSymbol)
-            if global != nil {
-                
+            if global != Universe.shared.nilObject {
+                frame.push(obj: global)
+            } else {
+                //        "Send 'unknownGlobal:' to self"
+                let ns = globalName as! SSymbol
+                self.getSelf().sendUnknownGlobal(ns.s, in: Universe.shared, using: self)
             }
         }
     }

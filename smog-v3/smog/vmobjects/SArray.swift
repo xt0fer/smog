@@ -9,6 +9,7 @@ import Foundation
 
 class SArray: SObject {
     
+    var indexableFields: [SObject] = []
     
     //  new: length with: nilObject = (
     //    ^ self new initializeWith: length and: nilObject
@@ -22,7 +23,6 @@ class SArray: SObject {
         self.init(size: 0, with:  Universe.shared.nilObject)
     }
     
-    var indexableFields: [SObject] = []
     //
     //  initializeWith: length and: nilObject = (
     //    indexableFields := Array new: length withAll: nilObject.

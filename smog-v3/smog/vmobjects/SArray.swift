@@ -15,21 +15,19 @@ class SArray: SObject {
     //  )
     init(size: Int, with: SObject) {
         self.indexableFields = Array(repeating: with, count: size)
-        super.init()
+        super.init(nArgs: 0, clazz: Universe.shared.arrayClass)
     }
     
     convenience init() {
         self.init(size: 0, with:  Universe.shared.nilObject)
     }
     
-    //SArray = SAbstractObject (
-    //  | indexableFields |
-    var indexableFields: [SAbstractObject] = []
+    var indexableFields: [SObject] = []
     //
     //  initializeWith: length and: nilObject = (
     //    indexableFields := Array new: length withAll: nilObject.
     //  )
-    func initializeWith(_ length: Int, and: SAbstractObject) {
+    func initializeWith(_ length: Int, and: SObject) {
         
     }
     //
@@ -40,14 +38,14 @@ class SArray: SObject {
     //  indexableField: idx = (
     //    ^ indexableFields at: idx
     //  )
-    func indexableField(idx: Int) -> SAbstractObject{
+    func indexableField(idx: Int) -> SObject{
         return self.indexableFields[idx]
     }
     //
     //  indexableField: idx put: val = (
     //    ^ indexableFields at: idx put: val
     //  )
-    func indexableField(_ idx: Int, put: SAbstractObject) {
+    func indexableField(_ idx: Int, put: SObject) {
         self.indexableFields[idx] = put
     }
     //  numberOfIndexableFields = (
@@ -69,9 +67,9 @@ class SArray: SObject {
     //  )
     func copyAndExtendWith(value: SObject, in u: Universe) {
         let newSize = self.indexableFields.count+1
-        let result = u.newArray(newSize)
+        let result = u.newArray(size: newSize)
         self.copyIndexableFieldsTo(destination: result)
-        result.inindexableFields[newSize] = value
+        result.indexableFields[newSize] = value
     }
     //
     //  copyIndexableFieldsTo: destination = (

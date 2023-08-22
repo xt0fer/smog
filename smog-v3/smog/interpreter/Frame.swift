@@ -37,7 +37,7 @@ class Frame: SArray {
         self.contextFrame = contextFrame
         self.method = method
         self.stack = SArray(size: maxStack, with: with) // prob nilObject
-        super.init()
+        super.init(size: 0, with: Universe.shared.nilObject)
         
         self.resetStackPointer()
         self.bytecodeIndex = 1
@@ -111,6 +111,15 @@ class Frame: SArray {
 //
 //    ^ frame
 //  )
+    func context(level: Int) -> Frame {
+        var f = self
+        var l = level
+        while level > 0 {
+            f = f.contextFrame!
+            l -= 1
+        }
+        return f
+    }
 //
 //  outerContext = (
 //    | frame |
@@ -123,6 +132,13 @@ class Frame: SArray {
 //
 //    ^ frame
 //  )
+    func outerContext() -> Frame {
+        var f = self
+        while f.hasContext() {
+            f = f.contextFrame!
+        }
+        return f
+    }
 //
 //  method = (
 //    ^ method
@@ -135,6 +151,11 @@ class Frame: SArray {
 //    stackPointer := stackPointer - 1.
 //    ^ stack at: sp.
 //  )
+    func pop() -> SObject {
+        let sp = self.stackPointer
+        self.stackPointer -= 1
+        return self.stack.field(index: sp)
+    }
 //
 //  push: aSAbstractObject = (
 //    "Push an object onto the expression stack"
@@ -143,6 +164,11 @@ class Frame: SArray {
 //    stack at: sp put: aSAbstractObject.
 //    stackPointer := sp
 //  )
+    func push(obj: SObject) {
+        let sp = stackPointer + 1
+        self.stack.fieldAt(sp, put: obj)
+        self.stackPointer = sp
+    }
 //
 //  resetStackPointer = (
 //    "arguments are stored in front of local variables"
@@ -160,17 +186,26 @@ func resetStackPointer() {
 //    "Get the current bytecode index for this frame"
 //    ^ bytecodeIndex
 //  )
+//    func bytecodeIndex() -> Int {
+//        return self.bytecodeIndex
+//    }
 //
 //  bytecodeIndex: value = (
 //    "Set the current bytecode index for this frame"
 //    bytecodeIndex := value
 //  )
+    func bytecodeIndex(idx: Int) {
+        self.bytecodeIndex = idx
+    }
 //
 //  stackElement: index = (
 //    "Get the stack element with the given index
 //     (an index of zero yields the top element)"
 //    ^ stack at: stackPointer - index
 //  )
+    func stackElement(idx: Int) -> SObject {
+        return self.stack.indexableFields[idx]
+    }
 //
 //  stackElement: index put: value = (
 //    "Set the stack element with the given index to the given value

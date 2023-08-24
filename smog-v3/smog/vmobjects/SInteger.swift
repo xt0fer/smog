@@ -11,11 +11,11 @@ class SInteger: SObject {
     
     
     var wrappedValue: Int
-    var debugId = "SInteger"
 
     init(i: Int) {
         self.wrappedValue = i
         super.init(nArgs: 0, clazz: Universe.shared.integerClass)
+        self.debugSDesc = "SInteger"
     }
 
     func integer() -> Int {

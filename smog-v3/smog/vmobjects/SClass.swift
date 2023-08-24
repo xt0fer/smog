@@ -9,7 +9,6 @@ import Foundation
 
 class SClass: SObject {
     
-    lazy var debugId = "SClass(\(String(describing: self.clazz.name)))"
     var universe: Universe
     var superClass: SClass
     var name: SSymbol
@@ -21,7 +20,7 @@ class SClass: SObject {
         set {
             _instanceInvokables = newValue
             // do a loop to init to nil
-            for (index, value) in _instanceInvokables.indexableFields.enumerated() {
+            for (index, _) in _instanceInvokables.indexableFields.enumerated() {
                 var ivok = _instanceInvokables.indexableFields[index] as! Invokable
                 ivok.holder(value: self)
                 //invokeCache[value.signature()] = value as! any Invokable
@@ -32,13 +31,13 @@ class SClass: SObject {
     var invokeCache: [SSymbol:Invokable] = [:]
 
     init(_ u: Universe) {
-        self.universe = u
         super.init(nArgs: 0, clazz: u.classClass)
     }
 
     init(_ numberOfFields: Int, u: Universe) {
         self.universe = u
         super.init(nArgs: numberOfFields, clazz: u.classClass)
+        debugSDesc = "SClass()"
     }
 
 

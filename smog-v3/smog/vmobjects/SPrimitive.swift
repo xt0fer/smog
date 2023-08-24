@@ -14,7 +14,6 @@ class SPrimitive: SObject, Invokable {
     var isEmpty: Bool = false
     var operation: SBlock
     
-    lazy var debugId = "SPrimitive(\(String(describing: self.somClass())))"
     
     init(aSSymbol: SSymbol, block: SBlock) {
         self.signatureSym = aSSymbol
@@ -22,6 +21,7 @@ class SPrimitive: SObject, Invokable {
         self.operation = block
         holderClass = Universe.shared.primClass
         super.init(nArgs: 0, clazz: Universe.shared.primClass)
+        self.debugSDesc = "SPrimitive()"
     }
     //
     // this init looks like it puts lambda (block) of a failed message call into the opertion field.

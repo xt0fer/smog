@@ -12,6 +12,7 @@ class SObject: Sender, Debuggable, Hashable {
     
     var fields: [SObject] = []
     var clazz: SClass
+    var debugSDesc = "SObject()"
 
     convenience init() {
         self.init(nArgs: 0, clazz: Universe.shared.objectClass)
@@ -54,7 +55,6 @@ class SObject: Sender, Debuggable, Hashable {
         print(e)
     }
     
-
     func somClass() -> SClass {
         return self.clazz
     }
@@ -64,6 +64,10 @@ class SObject: Sender, Debuggable, Hashable {
     }
     func somClassIn(_ u: Universe) -> SClass {
         return self.clazz
+    }
+    
+    func asString() -> String {
+        return self.clazz.name.s
     }
 
     func fieldName(index: Int) -> SSymbol {
@@ -82,6 +86,6 @@ class SObject: Sender, Debuggable, Hashable {
         self.fields[index] = put
     }
     func debugString() -> String {
-        return "SObject(\(String(describing: self.somClass())))"
+        return self.debugSDesc + "\(self.identifier)"
     }
 }

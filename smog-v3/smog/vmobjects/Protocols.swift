@@ -17,7 +17,7 @@ protocol Invokable {
 
 }
 protocol Debuggable{
-    var debugId: String { get }
+    var debugSDesc: String { get }
     func debugString() -> String
 }
 

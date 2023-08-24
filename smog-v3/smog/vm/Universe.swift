@@ -310,10 +310,10 @@ class Universe {
         self.loadSystemClass(cls: doubleClass)
         
         //      "Fix up objectClass"
-        self.objectClass.superClass(nilObject)
+        self.objectClass.superClass(put: nilObject.clazz)
         
         //      "Load the generic block class"
-        //      blockClass = self.loadClass: (self.symbolFor: 'Block').
+        self.blockClass = self.loadClass(clsname: self.symbolFor("Block").asString())
         
         //      "Setup the true and false objects"
         //      trueSymbol = self.symbolFor: 'True'.

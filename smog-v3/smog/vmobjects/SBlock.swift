@@ -11,12 +11,13 @@ class SBlock: SObject {
     var method: SMethod
     var context: Frame
     var blockClass: SClass
-    
+
     init(aSMethod: SMethod, aContext: Frame, aBlockClass: SClass) {
         self.method = aSMethod
         self.context = aContext
         self.blockClass = aBlockClass
         super.init(nArgs: 0, clazz: Universe.shared.blockClass)
+        self.debugSDesc = "SBlock()"
     }
     
     // TODO: evaluationPrimitive: numberOfArguments in: universe = (

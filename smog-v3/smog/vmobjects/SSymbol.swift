@@ -9,11 +9,12 @@ import Foundation
 
 class SSymbol: SString {
     var numSignatureArguments: Int = 0
-    lazy var debugId = "SSymbol(\(String(describing: self.somClass())))"
     
     override init(s: String) {
         super.init(s: s)
         self.determineNumberOfArguments()
+        self.debugSDesc = "SSymbol()"
+
     }
     
     func determineNumberOfArguments() {

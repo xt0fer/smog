@@ -15,7 +15,6 @@ class SMethod: SObject, Invokable {
     var literals: [SObject] // These should be SStrings or SSymbols??
     var numberOfLocals: Int
     var maximumNumberOfStackElements: Int
-    lazy var debugId = "SMethod(\(String(describing: self.clazz.name)))"
     
     init(aSSymbol: SSymbol, bc: [Int], literals: [SString], numLocals: Int, maxStack: Int) {
         self.signatureSym = aSSymbol
@@ -25,6 +24,7 @@ class SMethod: SObject, Invokable {
         self.maximumNumberOfStackElements = maxStack
         self.holderClass = Universe.shared.nilClass
         super.init(nArgs: 0, clazz: Universe.shared.methodClass)
+        self.debugSDesc = "SMethod()"
     }
     
     func isPrimitive() -> Bool { return false }
@@ -99,16 +99,4 @@ class SMethod: SObject, Invokable {
     //  )
     func bytecode(at: Int) -> Int { return self.bytecodes[at] }
     //
-    //  invoke: frame using: interpreter = (
-    //    | newFrame |
-    //    "Allocate and push a new frame on the interpreter stack"
-    //    newFrame := interpreter pushNewFrame: self.
-    //    newFrame copyArgumentsFrom: frame
-    //  )
-    //
-    
-    func invoke(frame: Frame,  using interpreter: Interpreter) {
-        let newFrame = interpreter.pushNewFrame(method: self)
-        newFrame.copyArgumentsFrom(frame: frame)
-    }
 }

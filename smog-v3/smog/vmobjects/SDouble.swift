@@ -10,11 +10,12 @@ import Foundation
 class SDouble: SObject {
     
     var wrappedValue: Float
-    var debugId = "SDouble"
+    
     
     init(d: Float) {
         self.wrappedValue = d
         super.init(nArgs: 0, clazz: Universe.shared.doubleClass)
+        debugSDesc = "SDouble"
     }
     func double() -> Float {
         return self.wrappedValue

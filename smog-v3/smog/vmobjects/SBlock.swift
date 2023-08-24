@@ -35,7 +35,10 @@ class SBlock: SObject {
     //        newFrame := interp pushNewFrame: rcvr method with: context.
     //        newFrame copyArgumentsFrom: frame ]
     //  )
-
+    func evaluationPrimitive(_ numberOfArguments: Int, universe: Universe) -> SPrimitive {
+        return SPrimitive(aSSymbol: <#SSymbol#>, block: <#SBlock#>)
+    }
+    
     // TODO: computeSignatureString: numberOfArguments = (
     //    | signatureString |
     //    signatureString := 'value'.
@@ -48,7 +51,16 @@ class SBlock: SObject {
     //
     //    ^ signatureString
     //  )
-    
+    func computeSignatureString(numberOfArguments: Int) -> String {
+        var signatureString = "value"
+        if numberOfArguments > 1 {
+            signatureString.append(":")
+        }
+        for _ in 2...(numberOfArguments - 1) {
+            signatureString.append("with:")
+        }
+        return signatureString
+    }
 }
 
 //SBlock = SAbstractObject (

@@ -9,6 +9,7 @@ import Foundation
 
 class SClass: SObject {
     
+    lazy var debugId = "SClass(\(String(describing: self.clazz.name)))"
     var universe: Universe
     var superClass: SClass
     var name: SSymbol
@@ -21,8 +22,9 @@ class SClass: SObject {
             _instanceInvokables = newValue
             // do a loop to init to nil
             for (index, value) in _instanceInvokables.indexableFields.enumerated() {
-                _instanceInvokables.indexableFields[index].holder(value: self)
-                invokeCache[value.signature()] = value as! any Invokable
+                var ivok = _instanceInvokables.indexableFields[index] as! Invokable
+                ivok.holder(value: self)
+                //invokeCache[value.signature()] = value as! any Invokable
             }
         }
     }
@@ -47,39 +49,14 @@ class SClass: SObject {
 //        return self.clazz!
 //    }
 
-//      superClass: aSClass = {
-//        superClass := aSClass
-//      }
     func superClass(put nc: SClass) {
         self.superClass = nc
     }
 
-//      hasSuperClass = {
-//        ^ superClass ~= universe nilObject
-//      }
-        func hasSuperClass() -> Bool {
-            return self.superClass != Universe.shared.nilObject
-        }
+    func hasSuperClass() -> Bool {
+        return !((self.superClass as SObject) == Universe.shared.nilObject)
+    }
 
-//      name = {
-//        ^ name
-//      }
-
-//      name: aSSymbol = {
-//        name := aSSymbol
-//      }
-
-//      instanceFields = {
-//        ^ instanceFields
-//      }
-
-//      instanceFields: aSArray = {
-//        instanceFields := aSArray
-//      }
-
-//      instanceInvokables = {
-//        ^ instanceInvokables
-//      }
 
 //      instanceInvokables: aSArray = {
 //        instanceInvokables := aSArray.
@@ -88,6 +65,7 @@ class SClass: SObject {
 //        1 to: self numberOfInstanceInvokables do: [:i |
 //          (instanceInvokables indexableField: i) holder: self ]
 //      }
+
     // SEE the variable SET leg.
 
 //      numberOfInstanceInvokables = {
@@ -135,7 +113,19 @@ class SClass: SObject {
 //      }
     func lookupInvokable(signature: SSymbol) -> Invokable {
         //        "Lookup invokable with given signature in array of instance invokables"
-        
+        for index in 1...instanceInvokables.numberOfIndexableFields() {
+            let invokable = instanceInvokables.indexableField(idx: index) as! Invokable
+            if signature == invokable.signature() {
+                return invokable
+            }
+        }
+        if self.hasSuperClass() {
+            let invokable = superClass.lookupInvokable(signature: signature)
+            if !(invokable == Universe.shared.nilObject) {
+                return invokable
+            }
+        }
+        return Universe.shared.nilObject
     }
 
 //      lookupFieldIndex: fieldName = {
@@ -149,6 +139,15 @@ class SClass: SObject {
 //        "Field not found"
 //        ^ -1
 //      }
+    func lookupFieldIndex(fieldName: SSymbol) -> Int {
+        //        "Lookup invokable with given signature in array of instance invokables"
+        for index in 1...self.numberOfInstanceFields() {
+            if fieldName == self.fieldName(index: index) {
+                return index
+            }
+        }
+        return -1
+    }
 
 //      addInstanceInvokable: value = {
 //        "Add the given invokable to the array of instance invokables"
@@ -166,10 +165,18 @@ class SClass: SObject {
 //        instanceInvokables := instanceInvokables copyAndExtendWith: value in: universe.
 //        ^ true
 //      }
+    func addInstanceInvokable(_ value: Invokable) -> Bool {
+        print(" addInstanceInvokable not implemented")
+
+        return false
+    }
 
 //      addInstancePrimitive: value = {
 //        self addInstancePrimitive: value dontWarn: false
 //      }
+    func addInstancePrimitive(_ value: SPrimitive) {
+        self.addInstancePrimitive(value, dontWarn: false)
+    }
 
 //      addInstancePrimitive: value dontWarn: suppressWarning = {
 //        value holder: self.
@@ -177,10 +184,15 @@ class SClass: SObject {
 //          Universe print: 'Warning: Primitive ' + value signature string.
 //          Universe println: ' is not in class definition for class ' + name string ]
 //      }
-
-    func instanceFieldName(index: Int) -> SSymbol {
-        
+    func addInstancePrimitive(_ value: SPrimitive, dontWarn: Bool) {
+        value.holder(self)
+        if (self.addInstanceInvokable(value as! Invokable) && !dontWarn) {
+            print("Warning: Primitive \(String(describing: value.signature.string))")
+            print(" is not in class definition for class ' + name string")
+        }
     }
+
+
 //      instanceFieldName: index = {
 //        "Get the name of the instance field with the given index"
 //        index > self numberOfSuperInstanceFields
@@ -195,6 +207,18 @@ class SClass: SObject {
 //            "Ask the super class to return the name of the instance field"
 //            ^ superClass instanceFieldName: index ]
 //      }
+    func instanceFieldName(index: Int) -> SSymbol {
+        // "Get the name of the instance field with the given index"
+        if index > self.numberOfSuperInstanceFields() {
+            // "Adjust the index to account for fields defined in the super class"
+            let idx = index - self.numberOfSuperInstanceFields()
+            // "Return the symbol representing the instance fields name"
+            return self.instanceFieldName(index: idx)
+        } else {
+            // "Ask the super class to return the name of the instance field"
+            return superClass.instanceFieldName(index: index)
+        }
+    }
 
 //      numberOfInstanceFields = {
 //        "Get the total number of instance fields in this class"
@@ -211,7 +235,7 @@ class SClass: SObject {
 //      }
     func numberOfSuperInstanceFields() -> Int {
         if self.hasSuperClass() {
-            return self.superClass!.numberOfInstanceFields()
+            return self.superClass.numberOfInstanceFields()
         }
         return 0
     }
@@ -224,6 +248,14 @@ class SClass: SObject {
 //            ifTrue: [ ^ true ] ].
 //        ^ false
 //      }
+    func hasPrimitives() -> Bool {
+        for i in 1...self.numberOfInstanceInvokables() {
+            if self.instanceInvokable(index: i).isPrimitive() {
+                return true
+            }
+        }
+        return false
+    }
 
 //      loadPrimitives = {
 //        | className primsClass |
@@ -238,13 +270,12 @@ class SClass: SObject {
 //          ifFalse: [
 //            Universe println: 'Primitives class ' + className + ' not found' ]
 //      }
-
-
-//      "For using in debugging tools such as the Diassembler"
-//      debugString = ( ^ 'SClass(' + name string + ')' )
+    func loadPrimitives() {
+        print("OOPS loadPrimitives() not implemented")
+    }
 
     override func debugString() -> String {
-        return "SClass(\(String(describing: self.clazz?.name)))"
+        return "SClass(\(String(describing: self.clazz.name)))"
     }
 
     

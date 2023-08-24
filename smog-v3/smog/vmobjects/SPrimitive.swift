@@ -7,19 +7,20 @@
 
 import Foundation
 
-class SPrimitive: SObject {
+class SPrimitive: SObject, Invokable {
     
-    var signature: SSymbol
-    var holder: SObject
+    var signatureSym: SSymbol
+    var holderClass: SClass
     var isEmpty: Bool = false
     var operation: SBlock
-
+    
+    lazy var debugId = "SPrimitive(\(String(describing: self.somClass())))"
     
     init(aSSymbol: SSymbol, block: SBlock) {
-        self.signature = aSSymbol
+        self.signatureSym = aSSymbol
         self.isEmpty = false
         self.operation = block
-        holder = Universe.shared.nilObject
+        holderClass = Universe.shared.primClass
         super.init(nArgs: 0, clazz: Universe.shared.primClass)
     }
     //
@@ -37,24 +38,38 @@ class SPrimitive: SObject {
     //      self send: 'error:' with: (Array with: receiver with: (universe newString: msg))
     //           in: universe using: interp ].
     //  )
-
-    func holder(_ newHolder: SObject) {
-        self.holder = newHolder
-    }
-    
-    override func debugString() -> String {
-        return "SMethod(\(String(describing: self.clazz.name)))"
-    }
-    
+        
     func isPrimitive() -> Bool { return false }
-
-    func invoke(frame: Frame, using interpreter: Interpreter) -> SObject {
-        print("invoke(frame:using:) not implemented")
-        return Universe.shared.nilObject //Block operation value: frame with: interp
+    
+//    func invoke(frame: Frame, using interpreter: Interpreter) -> SObject {
+//        print("invoke(frame:using:) not implemented")
+//        return Universe.shared.nilObject //Block operation value: frame with: interp
+//    }
+    func invoke(frame: Frame,  using interpreter: Interpreter) {
+        let newFrame = interpreter.pushNewFrame(method: self)
+        newFrame.copyArgumentsFrom(frame: frame)
     }
 
-//    var debugString: String {
-//        return "SPrimitive(\(String(describing: self.somClass())))"
+
+    func invoke(frame: Frame) {
+        self.invoke(frame: frame, using: Universe.shared.interpreter)
+    }
+    
+
+//    func invoke(frame: Frame, using: Interpreter) {
+//        <#code#>
 //    }
+    
+    func signature() -> SSymbol {
+        return self.signatureSym
+    }
+    
+    func holder() -> SClass {
+        return self.holderClass
+    }
+    
+    func holder(value: SClass) {
+        self.holderClass = value
+    }
 
 }

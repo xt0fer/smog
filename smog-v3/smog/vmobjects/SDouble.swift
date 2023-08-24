@@ -7,12 +7,14 @@
 
 import Foundation
 
-class SDouble: SAbstractObject {
+class SDouble: SObject {
     
     var wrappedValue: Float
+    var debugId = "SDouble"
+    
     init(d: Float) {
         self.wrappedValue = d
-        super.init()
+        super.init(nArgs: 0, clazz: Universe.shared.doubleClass)
     }
     func double() -> Float {
         return self.wrappedValue
@@ -20,8 +22,5 @@ class SDouble: SAbstractObject {
     func newFor() -> SDouble {
         return SDouble(d: self.wrappedValue)
     }
-    func debugString() -> String {
-        return "SDouble()"
-    }
-
+    
 }

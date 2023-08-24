@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		5C9599C82A8E9E2400B5818A /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C9599C72A8E9E2400B5818A /* main.swift */; };
 		5C9599CF2A8E9ED100B5818A /* SObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C9599CE2A8E9ED100B5818A /* SObject.swift */; };
-		5C9599D32A8E9F3000B5818A /* SAbstractObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C9599D22A8E9F3000B5818A /* SAbstractObject.swift */; };
+		5C9599D32A8E9F3000B5818A /* Protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C9599D22A8E9F3000B5818A /* Protocols.swift */; };
 		5C9599D52A8EA1F600B5818A /* SClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C9599D42A8EA1F600B5818A /* SClass.swift */; };
 		5C9599D72A8EA47900B5818A /* Universe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C9599D62A8EA47900B5818A /* Universe.swift */; };
 		5C9599D92A8EA49500B5818A /* SSymbol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C9599D82A8EA49500B5818A /* SSymbol.swift */; };
@@ -54,7 +54,7 @@
 		5C9599C42A8E9E2400B5818A /* smog */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = smog; sourceTree = BUILT_PRODUCTS_DIR; };
 		5C9599C72A8E9E2400B5818A /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		5C9599CE2A8E9ED100B5818A /* SObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SObject.swift; sourceTree = "<group>"; };
-		5C9599D22A8E9F3000B5818A /* SAbstractObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SAbstractObject.swift; sourceTree = "<group>"; };
+		5C9599D22A8E9F3000B5818A /* Protocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Protocols.swift; sourceTree = "<group>"; };
 		5C9599D42A8EA1F600B5818A /* SClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SClass.swift; sourceTree = "<group>"; };
 		5C9599D62A8EA47900B5818A /* Universe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Universe.swift; sourceTree = "<group>"; };
 		5C9599D82A8EA49500B5818A /* SSymbol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSymbol.swift; sourceTree = "<group>"; };
@@ -134,7 +134,7 @@
 		5C9599D12A8E9F1700B5818A /* vmobjects */ = {
 			isa = PBXGroup;
 			children = (
-				5C9599D22A8E9F3000B5818A /* SAbstractObject.swift */,
+				5C9599D22A8E9F3000B5818A /* Protocols.swift */,
 				5C9599E02A8EADED00B5818A /* SArray.swift */,
 				5C9599DE2A8EACCD00B5818A /* SBlock.swift */,
 				5C9599D42A8EA1F600B5818A /* SClass.swift */,
@@ -266,7 +266,7 @@
 				5C9599ED2A8EC18000B5818A /* SPrimitive.swift in Sources */,
 				5C9599D72A8EA47900B5818A /* Universe.swift in Sources */,
 				5C9599EB2A8EC14700B5818A /* SMethod.swift in Sources */,
-				5C9599D32A8E9F3000B5818A /* SAbstractObject.swift in Sources */,
+				5C9599D32A8E9F3000B5818A /* Protocols.swift in Sources */,
 				5C9599CF2A8E9ED100B5818A /* SObject.swift in Sources */,
 				5C9599D92A8EA49500B5818A /* SSymbol.swift in Sources */,
 				5C9599DB2A8EA4AD00B5818A /* SString.swift in Sources */,

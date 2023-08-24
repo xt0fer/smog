@@ -7,30 +7,27 @@
 
 import Foundation
 
-class SMethod: SObject {
+class SMethod: SObject, Invokable {
     
-    var signature: SSymbol
-    var holder: SObject
+    var signatureSym: SSymbol
+    var holderClass: SClass
     var bytecodes: [Int]
-    var literals: [SObject]
+    var literals: [SObject] // These should be SStrings or SSymbols??
     var numberOfLocals: Int
     var maximumNumberOfStackElements: Int
+    lazy var debugId = "SMethod(\(String(describing: self.clazz.name)))"
     
     init(aSSymbol: SSymbol, bc: [Int], literals: [SString], numLocals: Int, maxStack: Int) {
-        self.signature = aSSymbol
+        self.signatureSym = aSSymbol
         self.bytecodes = bc
         self.literals = literals
         self.numberOfLocals = numLocals
         self.maximumNumberOfStackElements = maxStack
-        self.holder = Universe.shared.nilObject
+        self.holderClass = Universe.shared.nilClass
         super.init(nArgs: 0, clazz: Universe.shared.methodClass)
     }
     
-    override func debugString() -> String {
-        return "SMethod(\(String(describing: self.clazz.name)))"
-    }
-    
-    override func isPrimitive() -> Bool { return false }
+    func isPrimitive() -> Bool { return false }
     
     
     //
@@ -44,23 +41,42 @@ class SMethod: SObject {
     //      (l class == SMethod or: [l class == SPrimitive]) ifTrue: [
     //        l holder: value ] ]
     //  )
-    func holder(_ newHolder: SObject) {
-        self.holder = newHolder
+    func holder(value: SClass) {
+        self.holderClass = value
         for lit in literals {
             if let l = lit as? SMethod {
-                l.holder(newHolder)
+                l.holder(value: value)
             }
             if let l = lit as? SPrimitive {
-                l.holder(newHolder)
+                l.holder(value: value)
             }
         }
     }
     
+    func invoke(frame: Frame,  using interpreter: Interpreter) {
+        let newFrame = interpreter.pushNewFrame(method: self)
+        newFrame.copyArgumentsFrom(frame: frame)
+    }
+
+    func invoke(frame: Frame) {
+        self.invoke(frame: frame, using: Universe.shared.interpreter)
+    }
+    
+    func signature() -> SSymbol {
+        return self.signatureSym
+    }
+    
+    func holder() -> SClass {
+        return self.holderClass
+    }
+    
+    
     //
     //  constant: bytecodeIndex = (
-    //    "Get the constant associated to a given bytecode index"
     //    ^ literals at: (bytecodes at: bytecodeIndex + 1)
     //  )
+
+    //    "Get the constant/literal/string/symbol associated to a given bytecode index"
     func constant(bcIndex: Int) -> SObject {
         return self.literals[Int(self.bytecodes[bcIndex + 1] as Int)]
     }
@@ -69,7 +85,7 @@ class SMethod: SObject {
     //    "Get the number of arguments of this method"
     //    ^ signature numberOfSignatureArguments
     //  )
-    func numberOfArguments() -> Int { return self.signature.numSignatureArguments }
+    func numberOfArguments() -> Int { return self.signatureSym.numSignatureArguments }
     //
     //  numberOfBytecodes = (
     //    "Get the number of bytecodes in this method"
@@ -92,7 +108,7 @@ class SMethod: SObject {
     //
     
     func invoke(frame: Frame,  using interpreter: Interpreter) {
-        let newFrame = interpreter.pushNewFrame(self)
-        newFrame.copyArgumentsFrom(frame)
+        let newFrame = interpreter.pushNewFrame(method: self)
+        newFrame.copyArgumentsFrom(frame: frame)
     }
 }

@@ -8,18 +8,52 @@
 import Foundation
 
 
-class SObject: SAbstractObject {
+class SObject: Sender, Debuggable, Hashable {
+    
     var fields: [SObject] = []
     var clazz: SClass
 
-    convenience override init() {
+    convenience init() {
         self.init(nArgs: 0, clazz: Universe.shared.objectClass)
     }
     
+    var identifier: String {
+        return UUID().uuidString
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        return hasher.combine(identifier)
+    }
+    
+    public static func == (lhs: SObject, rhs: SObject) -> Bool {
+        return lhs.identifier == rhs.identifier
+    }
+
     init(nArgs: Int, clazz: SClass) {
         self.fields = Array(repeating: Universe.shared.nilObject, count: nArgs)
         self.clazz = clazz
     }
+
+    func send(_ selectorString: String, withArguments: [SObject], in: Universe, using: Interpreter) {
+        
+    }
+    
+    func sendDoesNotUnderstand(_ selector: String, in: Universe, using: Interpreter) {
+        
+    }
+    
+    func sendUnknownGlobal(_ globalName: String, in: Universe, using: Interpreter) {
+        
+    }
+    
+    func sendEscapedBlock(_ block: SBlock, in: Universe, using: Interpreter) {
+    
+    }
+    
+    func error(_ e: String) {
+        print(e)
+    }
+    
 
     func somClass() -> SClass {
         return self.clazz
@@ -32,11 +66,11 @@ class SObject: SAbstractObject {
         return self.clazz
     }
 
-    func fieldName(index: Int) -> SString {
+    func fieldName(index: Int) -> SSymbol {
         return self.clazz.instanceFieldName(index: index)
     }
-    func fieldIndex(name: SString) -> Int {
-        return self.clazz.lookupFieldIndex(name)
+    func fieldIndex(name: SSymbol) -> Int {
+        return self.clazz.lookupFieldIndex(fieldName: name)
     }
     func numberOfFields() -> Int {
         return fields.count

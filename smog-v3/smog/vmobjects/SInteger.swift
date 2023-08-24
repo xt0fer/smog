@@ -7,23 +7,21 @@
 
 import Foundation
 
-class SInteger: SAbstractObject {
+class SInteger: SObject {
     
     
     var wrappedValue: Int
+    var debugId = "SInteger"
+
     init(i: Int) {
         self.wrappedValue = i
-        super.init()
+        super.init(nArgs: 0, clazz: Universe.shared.integerClass)
     }
 
     func integer() -> Int {
         return self.wrappedValue
     }
     
-    func debugString() -> String {
-        return "SInteger()"
-    }
-
     func newFor() -> SInteger {
         return SInteger(i: self.wrappedValue)
     }

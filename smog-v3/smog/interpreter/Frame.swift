@@ -32,7 +32,7 @@ class Frame: SArray {
     //    self resetStackPointer.
     //    bytecodeIndex := 1.
     //  )
-    init(with: SObject, previousFrame: Frame, contextFrame: Frame, method: SMethod, maxStack: Int) {
+    init(with: SObject, previousFrame: Frame, contextFrame: Frame?, method: SMethod, maxStack: Int) {
         self.previousFrame = previousFrame
         self.contextFrame = contextFrame
         self.method = method
@@ -243,7 +243,7 @@ class Frame: SArray {
     func local(idx: Int, at: Int) -> SObject {
         return self.context(level: at).local(idx: idx)
     }
-    func index(idx: Int, at: Int, put obj: SObject) {
+    func local(idx: Int, at: Int, put obj: SObject) {
         var ctx = self.context(level: at)
         ctx.stack.indexableFields[localOffset + idx - 1] = obj
     }

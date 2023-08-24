@@ -131,18 +131,39 @@ class Interpreter {
     //  doPop = (
     //    frame pop
     //  )
+    func doPop() {
+        if let frame = self.frame {
+            _ = frame.pop()
+        }
+    }
     //
     //  doPopLocal: bytecodeIndex = (
     //    frame local: (frame method bytecode: bytecodeIndex + 1)
     //             at: (frame method bytecode: bytecodeIndex + 2)
     //            put: frame pop
     //  )
+    func doPopLocal(idx: Int) {
+        if let frame = self.frame {
+            frame.local(idx: frame.method.bytecode(at: idx + 1),
+                        at: frame.method.bytecode(at: idx + 2),
+                        put: frame.pop())
+        }
+    }
+
     //
     //  doPopArgument: bytecodeIndex = (
     //    frame argument: (frame method bytecode: bytecodeIndex + 1)
     //                at: (frame method bytecode: bytecodeIndex + 2)
     //               put: frame pop
     //  )
+    func doPopArgument(idx: Int) {
+        if let frame = self.frame {
+            frame.argument(idx: frame.method.bytecode(at: idx + 1),
+                        at: frame.method.bytecode(at: idx + 2),
+                        put: frame.pop())
+        }
+    }
+
     //
     //  doPopField: bytecodeIndex = (
     //    | fieldIndex |
@@ -151,6 +172,14 @@ class Interpreter {
     //    "Set the field with the computed index to the value popped from the stack"
     //    self getSelf field: fieldIndex put: frame pop
     //  )
+    func doPopField(idx: Int) {
+        if let frame = self.frame {
+            let fieldIndex = frame.method.bytecode(at: idx + 1)
+            //    "Set the field with the computed index to the value popped from the stack"
+            self.getSelf().fieldAt(idx, put: frame.pop())
+        }
+    }
+
     //
     //  doSend: bytecodeIndex = (
     //    | signature numberOfArguments receiver |
@@ -159,6 +188,14 @@ class Interpreter {
     //    receiver := frame stackElement: numberOfArguments - 1.
     //    self send: signature rcvrClass: (receiver somClassIn: universe)
     //  )
+    func doSend(idx: Int) {
+        if let frame = self.frame {
+            let signature = frame.method.constant(bcIndex: idx) as! SSymbol
+            let numArgs = signature.numSignatureArguments
+            let receiver = frame.stackElement(idx: numArgs - 1)
+            self.send(selector: signature, rcvrClass: receiver.somClass())
+        }
+    }
     //
     //  doSuperSend: bytecodeIndex = (
     //    | signature holderSuper invokable |
@@ -171,6 +208,17 @@ class Interpreter {
     //
     //    self activate: invokable orDnu: signature
     //  )
+    func doSuperSend(idx: Int) {
+        if let frame = self.frame {
+            let signature = frame.method.constant(bcIndex: idx) as! SSymbol
+            //    "Send the message
+            //     Lookup the invokable with the given signature"
+            let holderSuper = frame.method.holder.clazz.superClass
+            let invokable = holderSuper.lookupInvokable(signature: signature)
+            
+            self.activate(invokable: invokable, orDnu: signature)
+        }
+    }
     //
     //  doReturnLocal = (
     //    | result |
@@ -179,6 +227,12 @@ class Interpreter {
     //    "Pop the top frame and push the result"
     //    self popFrameAndPushResult: result
     //  )
+    func doReturnLocal() {
+        if let frame = self.frame {
+            let result = frame.pop()
+            self.popFrameAndPushResult(result: result)
+        }
+    }
     //
     //  doReturnNonLocal = (
     //    | result context |
@@ -215,6 +269,39 @@ class Interpreter {
     //
     //    self popFrameAndPushResult: result
     //  )
+    func doReturnNonLocal() {
+        if let frame = self.frame {
+            let result = frame.pop()
+            let context = frame.outerContext()
+            
+            if context.hasPreviousFrame() == false {
+                // "Try to recover by sending 'escapedBlock:' to the sending object
+                // this can get a bit nasty when using nested blocks. In this case
+                // the 'sender' will be the surrounding block and not the object
+                // that actually sent the 'value' message."
+                let block = frame.argument(idx: 1, at: 0) as! SBlock
+                let sender = frame.previousFrame?.outerContext().argument(idx: 1, at: 0)
+                
+                _ = self.popFrame()
+                
+                let method = frame.method
+                let numArgs = method.numberOfArguments()
+                for _ in 0...numArgs { _ = frame.pop() }
+                //      "... and execute the escapedBlock message instead"
+                //      sender sendEscapedBlock: block in: universe using: self.
+                sender!.sendEscapedBlock(block, in: Universe.shared, using: self)
+                //return self
+            }
+            //    "Unwind the frames"
+            //    [frame ~= context] whileTrue: [
+            //      self popFrame ].
+            while !(frame == context) {
+                _ = self.popFrame()
+            }
+            self.popFrameAndPushResult(result: result)
+        }
+    }
+
     //
     //  start = (
     //    [true] whileTrue: [
@@ -229,82 +316,107 @@ class Interpreter {
     //      result ~= nil
     //        ifTrue: [ ^ result ] ]
     //  )
-    //
+    
+    func start() -> SObject {
+        while true {
+            let bytecodeIndex = self.frame!.bytecodeIndex
+            let bytecode = self.frame!.method.bytecode(at: bytecodeIndex)
+            
+            let nextBytecodeIndex = bytecodeIndex + bytecodeLength // len is global
+            self.frame!.bytecodeIndex(idx: nextBytecodeIndex)
+            let result = self.dispatch(bc: bytecode, bytecodeIndex: bytecodeIndex)
+            if !(result == Universe.shared.nilObject) {
+                return result
+            }
+            
+        }
+    }
+
     //  dispatch: bytecode idx: bytecodeIndex = (
-    //    bytecode == #halt ifTrue: [
-    //      ^ frame stackElement: 0 ].
-    //
-    //    bytecode == #dup ifTrue: [
-    //      self doDup.
-    //      ^ nil ].
-    //
-    //    bytecode == #pushLocal ifTrue: [
-    //      self doPushLocal: bytecodeIndex.
-    //      ^ nil ].
-    //
-    //    bytecode == #pushArgument ifTrue: [
-    //      self doPushArgument: bytecodeIndex.
-    //      ^ nil ].
-    //
-    //    bytecode == #pushField ifTrue: [
-    //      self doPushField: bytecodeIndex.
-    //      ^ nil ].
-    //
-    //    bytecode == #pushBlock ifTrue: [
-    //      self doPushBlock: bytecodeIndex.
-    //      ^ nil ].
-    //
-    //    bytecode == #pushConstant ifTrue: [
-    //      self doPushConstant: bytecodeIndex.
-    //      ^ nil ].
-    //
-    //    bytecode == #pushGlobal ifTrue: [
-    //      self doPushGlobal: bytecodeIndex.
-    //      ^ nil ].
-    //
-    //    bytecode == #pop ifTrue: [
-    //      self doPop.
-    //      ^ nil ].
-    //
-    //    bytecode == #popLocal ifTrue: [
-    //      self doPopLocal: bytecodeIndex.
-    //      ^ nil ].
-    //
-    //    bytecode == #popArgument ifTrue: [
-    //      self doPopArgument: bytecodeIndex.
-    //      ^ nil ].
-    //
-    //    bytecode == #popField ifTrue: [
-    //      self doPopField: bytecodeIndex.
-    //      ^ nil ].
-    //
-    //    bytecode == #send ifTrue: [
-    //      self doSend: bytecodeIndex.
-    //      ^ nil ].
-    //
-    //    bytecode == #superSend ifTrue: [
-    //      self doSuperSend: bytecodeIndex.
-    //      ^ nil ].
-    //
-    //    bytecode == #returnLocal ifTrue: [
-    //      self doReturnLocal.
-    //      ^ nil ].
-    //
-    //    bytecode == #returnNonLocal ifTrue: [
-    //      self doReturnNonLocal.
-    //      ^ nil ].
-    //
-    //    self error: 'Unknown bytecode' + bytecode asString
-    //  )
+    func dispatch(bc: Int, bytecodeIndex: Int) -> SObject {
+        let nilObject = Universe.shared.nilObject
+        let bytecode = Bc(rawValue: bc)
+        if bytecode == Bc.halt { return (frame?.stackElement(idx: bytecodeIndex))! }
+        if bytecode == Bc.dup {
+            self.doDup()
+            return nilObject
+        }
+        if bytecode == Bc.pushLocal {
+            self.doPushLocal(idx: bytecodeIndex)
+            return nilObject
+        }
+        if bytecode == Bc.pushArgument {
+            self.doPushArgument(idx: bytecodeIndex)
+            return nilObject
+        }
+        if bytecode == Bc.pushField {
+            self.doPushField(idx: bytecodeIndex)
+            return nilObject
+        }
+        if bytecode == Bc.pushBlock {
+            self.doPushBlock(idx: bytecodeIndex)
+            return nilObject
+        }
+        if bytecode == Bc.pushConstant {
+            self.doPushConstant(idx: bytecodeIndex)
+            return nilObject
+        }
+        if bytecode == Bc.pushGlobal {
+            self.doPushGlobal(idx: bytecodeIndex)
+            return nilObject
+        }
+        if bytecode == Bc.pop {
+            self.doPop()
+            return nilObject
+        }
+        if bytecode == Bc.popLocal {
+            self.doPopLocal(idx: bytecodeIndex)
+            return nilObject
+        }
+        if bytecode == Bc.popArgument {
+            self.doPopArgument(idx: bytecodeIndex)
+            return nilObject
+        }
+        if bytecode == Bc.popField {
+            self.doPopField(idx: bytecodeIndex)
+            return nilObject
+        }
+        if bytecode == Bc.send {
+            self.doSend(idx: bytecodeIndex)
+            return nilObject
+        }
+        if bytecode == Bc.superSend {
+            self.doSuperSend(idx: bytecodeIndex)
+            return nilObject
+        }
+        if bytecode == Bc.returnLocal {
+            self.doReturnLocal()
+            return nilObject
+        }
+        if bytecode == Bc.returnNonLocal {
+            self.doReturnNonLocal()
+            return nilObject
+        }
+        //    self error: 'Unknown bytecode' + bytecode asString
+        print("Unknown bytecode \(bytecode!.rawValue)")
+    }
     //
     //  pushNewFrame: method with: contextFrame = (
     //    frame := universe newFrame: frame with: method with: contextFrame.
     //    ^ frame
     //  )
+    func pushNewFrame(method: SMethod, withContextFrame: Frame?) -> Frame {
+        let f = Universe.shared.newFrame(previousFrame: self.frame!, method: method, withContextFrame: withContextFrame)
+        return f
+    }
     //
     //  pushNewFrame: method = (
     //    ^ self pushNewFrame: method with: nil
     //  )
+    func pushNewFrame(method: SMethod) -> Frame {
+        self.pushNewFrame(method: method, withContextFrame: nil)
+    }
+
     //
     //  frame = (
     //    ^ frame
@@ -331,6 +443,10 @@ class Interpreter {
     //    invokable := receiverClass lookupInvokable: selector.
     //    self activate: invokable orDnu: selector
     //  )
+    func send(selector: SSymbol, rcvrClass: SClass) {
+        let invokable = rcvrClass.lookupInvokable(signature: selector)
+        self.activate(invokable: invokable, orDnu: selector)
+    }
     //
     //  activate: invokable orDnu: signature = (
     //    invokable ~= nil
@@ -343,6 +459,11 @@ class Interpreter {
     //          receiver := frame stackElement: numberOfArguments - 1.
     //          receiver sendDoesNotUnderstand: signature in: universe using: self ]
     //  )
+    func activate(invokable: Invokable, orDnu: SSymbol) {
+        if invokable != nil {
+            invokable.invoke(frame: (self.frame?)!, using: self )
+        }
+    }
     //
     //  popFrame = (
     //    | result |
@@ -358,6 +479,12 @@ class Interpreter {
     //    "Return the popped frame"
     //    ^ result
     //  )
+    func popFrame() -> Frame {
+        let result = self.frame
+        self.frame = self.frame!.previousFrame
+        result?.clearPreviousFrame()
+        return result!
+    }
     //
     //  popFrameAndPushResult: result = (
     //    | numberOfArguments |
@@ -371,5 +498,14 @@ class Interpreter {
     //
     //    frame push: result
     //  )
+    func popFrameAndPushResult(result: SObject) {
+        //    "Pop the top frame from the interpreter frame stack and
+        //     get the number of arguments and pop them"
+        let numArgs = self.popFrame().method.numberOfArguments()
+        for i in 0...numArgs {
+            _ = self.frame!.pop()
+        }
+        self.frame?.push(obj: result)
+    }
     //
 }

@@ -28,26 +28,44 @@ import Foundation
 //    bytecode == #returnLocal    ifTrue: [ ^ 1 ].
 //    bytecode == #returnNonLocal ifTrue: [ ^ 1 ].
 enum Bytecode: String {
-    case halt = "#halt"
+    case halt = "#halt" //0
     case dup = "#dup"
     case pushLocal = "#pushLocal"
     case pushArgument = "#pushArgument"
     case pushField = "#pushField"
-    case pushBlock = "#pushBlock"
+    case pushBlock = "#pushBlock" //5
     case pushConstant = "#pushConstant"
     case pushGlobal = "#pushGlobal"
     case pop = "#pop"
     case popLocal = "#popLocal"
-    case popArgument = "#popArgument"
+    case popArgument = "#popArgument" //10
     case popField = "#popField"
     case send = "#send"
     case superSend = "#superSend"
     case returnLocal = "#returnLocal"
-    case returnNonLocal = "#returnNonLocal"
+    case returnNonLocal = "#returnNonLocal" //15
 }
 
+enum Bc: Int {
+    case halt = 0
+    case dup
+    case pushLocal
+    case pushArgument
+    case pushField
+    case pushBlock
+    case pushConstant
+    case pushGlobal
+    case pop
+    case popLocal
+    case popArgument
+    case popField
+    case send
+    case superSend
+    case returnLocal
+    case returnNonLocal
+}
 let bytecodeArgs = [1,1,3,3,2,2,2,2,1,3,3,2,2,2,1,1]
-
+let bytecodeLength = 16
 //
 //    self error: 'Unknown bytecode' + bytecode asString
 //  )

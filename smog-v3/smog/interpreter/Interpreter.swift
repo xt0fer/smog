@@ -34,7 +34,7 @@ class Interpreter {
         if let frame = self.frame {
             frame.push(
                 obj: (frame.local(idx: (frame.method.bytecode(at: idx + 1)),
-                                        at: (frame.method.bytecode(at: idx + 2)))))
+                                  at: (frame.method.bytecode(at: idx + 2)))))
         }
     }
     //
@@ -47,7 +47,7 @@ class Interpreter {
         if let frame = self.frame {
             frame.push(
                 obj: (frame.argument(idx: (frame.method.bytecode(at: idx + 1)),
-                                        at: (frame.method.bytecode(at: idx + 2)))))
+                                     at: (frame.method.bytecode(at: idx + 2)))))
         }
     }
     //
@@ -65,7 +65,7 @@ class Interpreter {
             frame.push(obj: self.getSelf().field(index: fieldIndex))
         }
     }
-
+    
     //
     //  doPushBlock: bytecodeIndex = (
     //    | blockMethod |
@@ -82,13 +82,13 @@ class Interpreter {
             let blockMethod = frame.method.constant(bcIndex: idx) as! SMethod
             let univ = Universe.shared
             // "Push a new block with the current frame as context onto the stack"
-
+            
             frame.push(
                 obj: univ.newBlock(method: blockMethod , with: frame, numArgs: blockMethod.numberOfArguments())
             )
         }
     }
-
+    
     //
     //  doPushConstant: bytecodeIndex = (
     //    frame push: (frame method constant: bytecodeIndex)
@@ -98,7 +98,7 @@ class Interpreter {
             frame.push(obj: frame.method.constant(bcIndex: idx))
         }
     }
-
+    
     //
     //  doPushGlobal: bytecodeIndex = (
     //    | globalName global |
@@ -126,7 +126,7 @@ class Interpreter {
             }
         }
     }
-
+    
     //
     //  doPop = (
     //    frame pop
@@ -149,7 +149,7 @@ class Interpreter {
                         put: frame.pop())
         }
     }
-
+    
     //
     //  doPopArgument: bytecodeIndex = (
     //    frame argument: (frame method bytecode: bytecodeIndex + 1)
@@ -159,11 +159,11 @@ class Interpreter {
     func doPopArgument(idx: Int) {
         if let frame = self.frame {
             frame.argument(idx: frame.method.bytecode(at: idx + 1),
-                        at: frame.method.bytecode(at: idx + 2),
-                        put: frame.pop())
+                           at: frame.method.bytecode(at: idx + 2),
+                           put: frame.pop())
         }
     }
-
+    
     //
     //  doPopField: bytecodeIndex = (
     //    | fieldIndex |
@@ -179,7 +179,7 @@ class Interpreter {
             self.getSelf().fieldAt(idx, put: frame.pop())
         }
     }
-
+    
     //
     //  doSend: bytecodeIndex = (
     //    | signature numberOfArguments receiver |
@@ -213,7 +213,7 @@ class Interpreter {
             let signature = frame.method.constant(bcIndex: idx) as! SSymbol
             //    "Send the message
             //     Lookup the invokable with the given signature"
-            let holderSuper = frame.method.holder.clazz.superClass
+            let holderSuper = frame.method.holderClass.clazz.superClass
             let invokable = holderSuper.lookupInvokable(signature: signature)
             
             self.activate(invokable: invokable, orDnu: signature)
@@ -301,7 +301,7 @@ class Interpreter {
             self.popFrameAndPushResult(result: result)
         }
     }
-
+    
     //
     //  start = (
     //    [true] whileTrue: [
@@ -331,7 +331,7 @@ class Interpreter {
             
         }
     }
-
+    
     //  dispatch: bytecode idx: bytecodeIndex = (
     func dispatch(bc: Int, bytecodeIndex: Int) -> SObject {
         let nilObject = Universe.shared.nilObject
@@ -405,7 +405,7 @@ class Interpreter {
     //    frame := universe newFrame: frame with: method with: contextFrame.
     //    ^ frame
     //  )
-    func pushNewFrame(method: SMethod, withContextFrame: Frame?) -> Frame {
+    func pushNewFrame(invokable: Invokable, withContextFrame: Frame?) -> Frame {
         let f = Universe.shared.newFrame(previousFrame: self.frame!, method: method, withContextFrame: withContextFrame)
         return f
     }
@@ -413,10 +413,10 @@ class Interpreter {
     //  pushNewFrame: method = (
     //    ^ self pushNewFrame: method with: nil
     //  )
-    func pushNewFrame(method: SMethod) -> Frame {
-        self.pushNewFrame(method: method, withContextFrame: nil)
+    func pushNewFrame(invokable: Invokable) -> Frame {
+        self.pushNewFrame(invokable: invokable, withContextFrame: nil)
     }
-
+    
     //
     //  frame = (
     //    ^ frame
@@ -459,9 +459,15 @@ class Interpreter {
     //          receiver := frame stackElement: numberOfArguments - 1.
     //          receiver sendDoesNotUnderstand: signature in: universe using: self ]
     //  )
-    func activate(invokable: Invokable, orDnu: SSymbol) {
-        if invokable != nil {
-            invokable.invoke(frame: (self.frame?)!, using: self )
+    func activate(invokable: Invokable, orDnu signature: SSymbol) {
+        if let frame = self.frame {
+            if invokable != nil {
+                invokable.invoke(frame: frame, using: self )
+            } else {
+                let numberOfArguments = signature.numSignatureArguments
+                let receiver = frame.stackElement(idx: numberOfArguments - 1)
+                receiver.sendDoesNotUnderstand(signature.string(), in: self.u, using: self)
+            }
         }
     }
     //

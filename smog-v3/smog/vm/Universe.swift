@@ -31,7 +31,7 @@ class Universe {
     var symbolTable: [String : SSymbol] = [:]
     //    globals
     var globals: [SSymbol : SObject] = [:]
-    var    classPath: String
+    var    classPath = [".", "classes", "src"]
     var    dumpBytecodes = false
     var    interpreter: Interpreter
     
@@ -58,16 +58,17 @@ class Universe {
     var blockClass: SClass
     var doubleClass: SClass
     
+    var trueSymbol: SSymbol
+    var falseSymbol: SSymbol
+    var systemObject: SObject
     var trueClass: SClass
     var falseClass: SClass
+    
+    let defaultClassPath = "."
     
     func interpret(_ args: ArraySlice<String>) {
         
     }
-    func exit(_ statusCode: Int) {
-        
-    }
-    
     
     //    initialize = (
     //      symbolTable = Dictionary new.
@@ -82,41 +83,19 @@ class Universe {
     //      avoidExit = aBool
     //    )
     
-    //    exit: errorCode = (
-    //      "Exit from the Java system"
-    //      avoidExit
-    //        ifTrue: [
-    //          lastExitCode = errorCode.
-    //          exitBlock value: errorCode ]
-    //        ifFalse: [system exit: errorCode]
-    //    )
+    func exit(_ errorCode: Int) {
+        if self.avoidExit {
+            self.lastExitCode = errorCode
+            exitBlock.value(errorCode)
+        } else {
+            self.errorExit("Failed with code \(errorCode)")
+        }
+    }
     
-    //    lastExitCode = (
-    //      ^ lastExitCode
-    //    )
-    
-    //    errorExit: message = (
-    //      Universe errorPrintln: 'Runtime Error: ' + message.
-    //      self exit: 1
-    //    )
-    
-    //    nilObject   = ( ^ nilObject )
-    //    trueObject  = ( ^ trueObject )
-    //    falseObject = ( ^ falseObject )
-    //    metaclassClass = ( ^ metaclassClass )
-    
-    //    arrayClass  = ( ^ arrayClass )
-    //    blockClass  = ( ^ blockClass )
-    //    doubleClass = ( ^ doubleClass )
-    //    integerClass = ( ^ integerClass )
-    //    methodClass = ( ^ methodClass )
-    //    primClass = ( ^ primClass )
-    //    stringClass = ( ^ stringClass )
-    //    symbolClass = ( ^ symbolClass )
-    
-    //    defaultClassPath = (
-    //      ^ #('.')
-    //    )
+    func errorExit(_ msg: String) {
+        print("Runtime Error \(msg)")
+        exit(-1)
+    }
     
     //    setupClassPath: cp = (
     //      | paths cps |
@@ -168,6 +147,9 @@ class Universe {
     
     //      ^ remainingArgs asArray
     //    )
+    func handleArguments(_ args: [String]) {
+        
+    }
     
     //    pathClassExtension: str = (
     //      | pathElements fileName parentPath nameParts |
@@ -192,6 +174,16 @@ class Universe {
     //        ifTrue: [ ^ result integer ]
     //        ifFalse: [ ^ 1 ]
     //    )
+    func interpret(_ args: [String]) -> Int {
+        let remainingArgs = self.handleArguments(args)
+        let result = self.initializeInterpreter(remainingArgs)
+        if result.clazz.name == "SInteger" {
+            result.integer()
+        }
+        else {
+            return 1
+        }
+    }
     
     //    interpret: className with: selector = (
     //      | clazz initialize |
@@ -207,6 +199,14 @@ class Universe {
     
     //      ^ self interpret: initialize in: clazz with: nil
     //    )
+    func interpret(_ className: String, with: String) {
+        self.initializeObjectSystem()
+        var clazz = self.loadClass(clsname: self.symbolFor(className))
+        let initialize = (clazz.somClassIn(self).lookupInvokable(signature: self.symbolFor(with)))
+        if initialize.isNil() {
+            self.errorExit("Lookup failed for \(with)")
+        }
+    }
     
     //    initializeInterpreter: arguments = (
     //      | systemObject initialize argumentsArray |
@@ -258,9 +258,7 @@ class Universe {
     //      ^ interpreter start
     //    )
     
-    //    initializeObjectSystem = (
-    //      | trueSymbol falseSymbol systemObject |
-    func initializeObjectSystem() {
+    func initializeObjectSystem() -> SObject {
         
         //      "Allocate the nil object"
         self.nilObject = SObject()
@@ -313,32 +311,31 @@ class Universe {
         self.objectClass.superClass(put: nilObject.clazz)
         
         //      "Load the generic block class"
-        self.blockClass = self.loadClass(clsname: self.symbolFor("Block").asString())
+        self.blockClass = self.loadClass(clsname: self.symbolFor("Block"))
         
         //      "Setup the true and false objects"
-        //      trueSymbol = self.symbolFor: 'True'.
-        //      trueClass = self.loadClass: trueSymbol.
-        //      trueObject = self.newInstance: trueClass.
+        self.trueSymbol = self.symbolFor("True")
+        self.trueClass = self.loadClass(clsname: trueSymbol)
+        self.trueObject = self.newInstance(trueClass)
         
-        //      falseSymbol = self.symbolFor: 'False'.
-        //      falseClass = self.loadClass: falseSymbol.
-        //      falseObject = self.newInstance: falseClass.
+        self.falseSymbol = self.symbolFor("False")
+        self.falseClass = self.loadClass(clsname: falseSymbol)
+        self.falseObject = self.newInstance(falseClass)
         
         //      "Load the system class and create an instance of it"
-        //      systemClass = self.loadClass: (self.symbolFor: 'System').
-        //      systemObject = self.newInstance: systemClass.
+        self.systemClass = self.loadClass(clsname: self.symbolFor("System"))
+        self.systemObject = self.newInstance(systemClass)
         
         //      "Put special objects and classes into the dictionary of globals"
-        //      self.global: (self.symbolFor: 'nil') put: nilObject.
-        //      self.global: (self.symbolFor: 'true') put: trueObject.
-        //      self.global: (self.symbolFor: 'false') put: falseObject.
-        //      self.global: (self.symbolFor: 'system') put: systemObject.
-        //      self.global: (self.symbolFor: 'System') put: systemClass.
-        //      self.global: (self.symbolFor: 'Block') put: blockClass.
-        //      self.global: trueSymbol  put: trueClass.
-        //      self.global: falseSymbol put: falseClass.
-        //      ^ systemObject
-        //    )
+        self.global(self.symbolFor("nil"), put: nilObject)
+        self.global(self.symbolFor("true"), put: trueObject)
+        self.global(self.symbolFor("false"), put: falseObject)
+        self.global(self.symbolFor("system"), put: systemObject)
+        self.global(self.symbolFor("System"), put: systemClass)
+        self.global(self.symbolFor("Block"), put: blockClass)
+        self.global(trueSymbol,  put: trueClass)
+        self.global(falseSymbol, put: falseClass)
+        return systemObject
     }
     
     //    symbolFor: aString = (
@@ -544,7 +541,7 @@ class Universe {
         
         //      "Initialize the name of the system class"
         //      systemClass name: (self symbolFor: name).
-        //      systemClass somClass name: (self symbolFor: name + ' class').
+        //      systemClass somClass name: (self symbolFor: name + " class").
         
         //      "Insert the system class into the dictionary of globals"
         //      self global: systemClass name put: systemClass.
@@ -559,7 +556,7 @@ class Universe {
     //      "Global not found"
     //      ^ nil
     //    )
-    func global(symbol: SSymbol) -> SObject {
+    func global(_ symbol: SSymbol) -> SObject {
         return self.globals[symbol] ?? nilObject
     }
     
@@ -567,7 +564,7 @@ class Universe {
     //      "Insert the given value into the dictionary of globals"
     //      globals at: aSSymbol put: aSAbstractObject
     //    )
-    func global(symbol: SSymbol, put no: SObject ) {
+    func global(_ symbol: SSymbol, put no: SObject ) {
         self.globals[symbol] = no
     }
     
@@ -575,7 +572,7 @@ class Universe {
     //      "Returns if the universe has a value for the global of the given name"
     //      ^ globals containsKey: aSSymbol
     //    )
-    func hasGlobal(symbol: SSymbol) -> Bool {
+    func hasGlobal(_ symbol: SSymbol) -> Bool {
         return self.globals.index(forKey: symbol) != nil
     }
     
@@ -599,12 +596,12 @@ class Universe {
     //    )
     func blockClass(numOfArgs: Int) -> SClass {
         let name = self.symbolFor("Block\(numOfArgs)")
-        if self.hasGlobal(symbol: name) {
-            return self.global(symbol: name) as! SClass
+        if self.hasGlobal(name) {
+            return self.global(name) as! SClass
         }
         let result = self.loadClass(clsname: name, into: nilClass)
         
-        result.addInstancePrimitive(SBlock.evaluationPrimitive(numOfArgs, in: self))
+        result.addInstancePrimitive(SBlock.evaluationPrimitive(numOfArgs, universe: self))
         
     }
     
@@ -624,7 +621,7 @@ class Universe {
     //      self global: name put: result.
     //      ^ result
     //    )
-    func loadClass(clsname: String) -> SClass {
+    func loadClass(clsname: SSymbol) -> SClass {
         
     }
     

@@ -54,7 +54,7 @@ class SMethod: SObject, Invokable {
     }
     
     func invoke(frame: Frame,  using interpreter: Interpreter) {
-        let newFrame = interpreter.pushNewFrame(method: self)
+        let newFrame = interpreter.pushNewFrame(invokable: self)
         newFrame.copyArgumentsFrom(frame: frame)
     }
 

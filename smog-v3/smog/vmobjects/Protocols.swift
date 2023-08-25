@@ -9,6 +9,7 @@ import Foundation
 
 protocol Invokable {
     func isPrimitive() -> Bool
+    func isNil() -> Bool
     func invoke(frame: Frame)
     func invoke(frame: Frame, using: Interpreter)
     func signature() -> SSymbol

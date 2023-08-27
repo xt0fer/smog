@@ -331,6 +331,10 @@ import Foundation
 //    Universe errorPrintln: '<unknown bytecode>'
 //  )
 //)
+
+// LEXER
+// LEXER
+// LEXER
 // LEXER
 
 //MethodGenerationContext = (
@@ -1257,6 +1261,10 @@ import Foundation
 //    ^ self new initializeWith: fileContent for: aFileName in: universe
 //  )
 //)
+
+//SourcecodeCompiler
+//SourcecodeCompiler
+//SourcecodeCompiler
 
 //SourcecodeCompiler = (
 //  ----

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		5C83842B2A9B9CBA00E524AA /* Lexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C83842A2A9B9CBA00E524AA /* Lexer.swift */; };
+		5C83842D2A9BBD8C00E524AA /* SourcecodeCompiler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C83842C2A9BBD8C00E524AA /* SourcecodeCompiler.swift */; };
 		5C9599C82A8E9E2400B5818A /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C9599C72A8E9E2400B5818A /* main.swift */; };
 		5C9599CF2A8E9ED100B5818A /* SObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C9599CE2A8E9ED100B5818A /* SObject.swift */; };
 		5C9599D32A8E9F3000B5818A /* Protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C9599D22A8E9F3000B5818A /* Protocols.swift */; };
@@ -53,6 +54,7 @@
 
 /* Begin PBXFileReference section */
 		5C83842A2A9B9CBA00E524AA /* Lexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lexer.swift; sourceTree = "<group>"; };
+		5C83842C2A9BBD8C00E524AA /* SourcecodeCompiler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourcecodeCompiler.swift; sourceTree = "<group>"; };
 		5C9599C42A8E9E2400B5818A /* smog */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = smog; sourceTree = BUILT_PRODUCTS_DIR; };
 		5C9599C72A8E9E2400B5818A /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		5C9599CE2A8E9ED100B5818A /* SObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SObject.swift; sourceTree = "<group>"; };
@@ -165,6 +167,7 @@
 			isa = PBXGroup;
 			children = (
 				5C959A092A8EC45900B5818A /* CompilerAll.swift */,
+				5C83842C2A9BBD8C00E524AA /* SourcecodeCompiler.swift */,
 				5C83842A2A9B9CBA00E524AA /* Lexer.swift */,
 			);
 			path = compiler;
@@ -273,6 +276,7 @@
 				5C9599D32A8E9F3000B5818A /* Protocols.swift in Sources */,
 				5C9599CF2A8E9ED100B5818A /* SObject.swift in Sources */,
 				5C9599D92A8EA49500B5818A /* SSymbol.swift in Sources */,
+				5C83842D2A9BBD8C00E524AA /* SourcecodeCompiler.swift in Sources */,
 				5C9599DB2A8EA4AD00B5818A /* SString.swift in Sources */,
 				5C9599FA2A8EC34200B5818A /* DoublePrimitives.swift in Sources */,
 				5C9599DF2A8EACCD00B5818A /* SBlock.swift in Sources */,

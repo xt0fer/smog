@@ -94,7 +94,15 @@ class Parser {
     //       self method: mgenc.
     //       cgenc addMethod: (mgenc assemble: universe) ].
     //  )
-    
+    func classDef() {
+        self.fields()
+        while self.symIsMethod() {
+            var mgenc = MethodGenerationContext(cgenc)
+            mgenc.addArgument("self")
+            self.method(mgenc)
+            cgenc.addMethod(mgenc.assemble(universe))
+        }
+    }
     //  superclass = (
     //    | superName |
     //    sym == #identifier
@@ -240,6 +248,9 @@ class Parser {
     //  unarySelector = (
     //    ^ universe symbolFor: self identifier
     //  )
+    func unarySelector() -> SSymbol {
+        return universe.symbolFor(self.identifier())
+    }
     
     //  binarySelector = (
     //    | s |
@@ -251,14 +262,28 @@ class Parser {
     
     //    ^ universe symbolFor: s
     //  )
+    func binarySelector() -> SSymbol {
+        let s = self.text
+        if self.accept(.operatorSequence) ||
+            self.acceptOneOf(Parser.singleOpSyms) ||
+            self.expect(.none) { }
+        return universe.symbolFor(s)
+    }
+
     
     //  variable = (
     //    ^ self identifier
     //  )
+    func variable() -> String {
+        return self.identifier()
+    }
     
     //  argument = (
     //    ^ self variable
     //  )
+    func argument() -> String {
+        return self.variable()
+    }
     
     //  identifier = (
     //    | s |
@@ -267,21 +292,34 @@ class Parser {
     //      ifFalse: [self expect: #identifier].
     //    ^ s
     //  )
-    
+    func identifier() -> String {
+        if self.accept(.primitive) {
+            self.expect(.identifier)
+        }
+        return text
+    }
+
     //  keyword = (
     //    | s |
     //    s := text.
     //    self expect: #keyword.
     //    ^ s
     //  )
-    
+    func keyword() -> String {
+        self.expect(.keyword)
+        return text
+    }
+
     //  string = (
     //    | s |
     //    s := text.
     //    self expect: #string.
     //    ^ s
     //  )
-    
+    func string() -> String {
+        self.expect(.string)
+        return text
+    }
     //  selector = (
     //    (sym == #operatorSequence or: [self symIn: Parser singleOpSyms])
     //      ifTrue: [^ self binarySelector].
@@ -290,14 +328,26 @@ class Parser {
     
     //    ^ self unarySelector
     //  )
-    
+    func selector() -> SSymbol {
+        if (sym == .operatorSequence ||
+            self.symIn(Parser.singleOpSyms)) {
+            return self.binarySelector()
+        } else {
+            return self.keywordSelector()
+        }
+        return self.unarySelector()
+    }
     //  keywordSelector = (
     //    | s |
     //    s := text.
     //    self expectOneOf: Parser keywordSelectorSyms.
     //    ^ universe symbolFor: s
     //  )
-    
+    func keywordSelector() -> SSymbol {
+        let s = text
+        self.expectOneOf(Parser.keywordSelectorSyms)
+        return universe.symbolFor(s)
+    }
     //  result: mgenc = (
     //    self expression: mgenc.
     
@@ -308,6 +358,17 @@ class Parser {
     
     //    self accept: #period
     //  )
+    func result(_ mgenc: MethodGenerationContext) {
+        self.expression(mgenc)
+        if mgenc.isBlockMethod() {
+            bcGen.emitReturnNonLocal(mgenc)
+        } else {
+            bcGen.emitReturnLocal(mgenc)
+        }
+        mgenc.markAsFinished()
+        
+        self.accept(.period)
+    }
     
     //  expression: mgenc = (
     //    self peekForNextSymbolFromLexer.
@@ -316,6 +377,14 @@ class Parser {
     //      ifTrue: [self assignation: mgenc]
     //      ifFalse: [self evaluation: mgenc]
     //  )
+    func expression(_ mgenc: MethodGenerationContext) {
+        self.peekForNextSymbolFromLexer()
+        if nextSym == .assign {
+            self.assignation(mgenc)
+        } else {
+            self.evaluation(mgenc)
+        }
+    }
     
     //  assignation: mgenc = (
     //    | variables |
@@ -327,6 +396,18 @@ class Parser {
     //    variables do: [:v | bcGen emitDup: mgenc ].
     //    variables do: [:v | self gen: mgenc popVariable: v ]
     //  )
+    func assignation(_ mgenc: MethodGenerationContext) {
+        var variables: [String] = []
+        self.assignments(mgenc, to: variables)
+        self.evaluation(mgenc)
+        
+        for v in variables {
+            bcGen.emitDup(mgenc)
+        }
+        for v in variables {
+            self.gen(mgenc, popVariable: v)
+        }
+    }
     
     //  assignments: mgenc to: variables = (
     //    sym == #identifier ifTrue: [
@@ -335,6 +416,15 @@ class Parser {
     //      nextSym == #assign ifTrue: [
     //        self assignments: mgenc to: variables ] ]
     //  )
+    func assignments(_ mgenc: MethodGenerationContext, to variables: [String]) {
+        if sym == .identifier {
+            variables.append(self.assignment(mgenc))
+            self.peekForNextSymbolFromLexer()
+            if nextSym == .assign {
+                self.assignments(mgenc, to: variables)
+            }
+        }
+    }
     
     //  assignment: mgenc = (
     //    | v |
@@ -342,6 +432,11 @@ class Parser {
     //    self expect: #assign.
     //    ^ v
     //  )
+    func assignment(_ mgenc: MethodGenerationContext) -> String {
+        let v = self.variable()
+        self.expect(.assign)
+        return v
+    }
     
     //  evaluation: mgenc = (
     //    | superSend |
@@ -349,6 +444,12 @@ class Parser {
     //    self symIsMethod ifTrue: [
     //      self messages: mgenc with: superSend ]
     //  )
+    func evaluation(_ mgenc: MethodGenerationContext) {
+        let superSend = self.primary(mgenc)
+        if self.symIsMethod() {
+            self.messages(mgenc, with: superSend)
+        }
+    }
     
     //  primary: mgenc = (
     //    | superSend |
@@ -383,6 +484,32 @@ class Parser {
     //    self literal: mgenc.
     //    ^ superSend
     //  )
+    func primary(_ mgenc: MethodGenerationContext) -> Bool {
+        var superSend = false
+        if sym == .identifier {
+            var v = self.variable()
+            if v == "super" {
+                superSend = true
+                v = "self"
+            }
+            self.gen(mgenc, pushVariable: v)
+            return superSend
+        }
+        if sym == .newTerm {
+            self.nestedTerm(mgenc)
+            return superSend
+        }
+        if sym == .newBlock {
+            var bgenc = MethodGenerationContext(mgenc.holder(), with: mgenc)
+            bgenc.markAsBlockMethod()
+            self.nestedBlock(bgenc)
+            var blockMethod = bgenc.assembleMethod(universe)
+            bcGen.emit(mgenc, pushBlock: blockMethod)
+            return superSend
+        }
+        self.literal(mgenc)
+        return superSend
+    }
     
     //  messages: mgenc with: superSend = (
     //    sym == #identifier ifTrue: [
@@ -413,6 +540,34 @@ class Parser {
     
     //    self keywordMessage: mgenc with: superSend
     //  )
+    func messages(_ mgenc: MethodGenerationContext, with superSend: Bool) {
+        if sym == .identifier {
+            self.unaryMessage(mgenc, with: superSend)
+            while sym == .identifier {
+                self.unaryMessage(mgenc, with: false)
+            }
+            while sym == .operatorSequence ||
+                    self.symIn(Parser.binaryOpSyms) {
+                self.binaryMessage(mgenc, with: false)
+            }
+            if sym == .keyword {
+                self.keywordMessage(mgenc, with: false)
+            }
+            return self //??
+        }
+        if sym == .operatorSequence ||
+            symIn(Parser.binaryOpSyms) {
+            self.binaryMessage(mgenc, with: superSend)
+            if sym == .operatorSequence ||
+                symIn(Parser.binaryOpSyms) {
+                self.binaryMessage(mgenc, with: false)
+            }
+            if sym == .keyword {
+                self.keywordMessage(mgenc, with: false)
+            }
+        }
+        self.keywordMessage(mgenc, with: superSend)
+    }
     
     //  unaryMessage: mgenc with: superSend = (
     //    | msg |
@@ -421,16 +576,33 @@ class Parser {
     //    superSend ifTrue: [ bcGen emit: mgenc superSend: msg ]
     //              ifFalse: [ bcGen emit: mgenc send: msg ]
     //  )
-    
+    func unaryMessage(_ mgenc: MethodGenerationContext, with superSend: Bool) {
+        let msg = self.unarySelector()
+        if superSend {
+            bcGen.emit(mgenc, superSend: msg)
+        } else {
+            bcGen.emit(mgenc, send: msg)
+        }
+    }
     //  binaryMessage: mgenc with: superSend = (
     //    | msg |
     //    msg := self binarySelector.
     //    self binaryOperand: mgenc.
-    
+
     //    superSend ifTrue: [ bcGen emit: mgenc superSend: msg ]
     //              ifFalse: [ bcGen emit: mgenc send: msg ]
     //  )
-    
+    func binaryMessage(_ mgenc: MethodGenerationContext, with superSend: Bool) {
+        let msg = self.binarySelector()
+        self.binaryOperand(mgenc)
+        
+        if superSend {
+            bcGen.emit(mgenc, superSend: msg)
+        } else {
+            bcGen.emit(mgenc, send: msg)
+        }
+    }
+
     //  binaryOperand: mgenc = (
     //    | superSend |
     //    superSend := self primary: mgenc.
@@ -441,7 +613,15 @@ class Parser {
     
     //    ^ superSend
     //  )
-    
+    func binaryOperand(_ mgenc: MethodGenerationContext) -> Bool {
+        var superSend = self.primary(mgenc)
+        while sym == .identifier {
+            self.unaryMessage(mgenc, with: superSend)
+            superSend = false
+        }
+        return superSend
+    }
+
     //  keywordMessage: mgenc with: superSend = (
     //    | kw msg |
     //    kw := self keyword.
@@ -455,7 +635,22 @@ class Parser {
     //    superSend ifTrue: [ bcGen emit: mgenc superSend: msg ]
     //              ifFalse: [ bcGen emit: mgenc send: msg ]
     //  )
-    
+    func keywordMessage(_ mgenc: MethodGenerationContext, with superSend: Bool) {
+        var kw = self.keyword()
+        self.formula(mgenc)
+        
+        while sym == .keyword {
+            kw += self.keyword()
+            self.fomula(mgenc)
+        }
+        msg = universe.symbolFor(kw)
+        if superSend {
+            bcGen.emit(mgenc, superSend: msg)
+        } else {
+            bcGen.emit(mgenc, send: msg)
+        }
+    }
+
     //  formula: mgenc = (
     //    | superSend |
     //    superSend := self binaryOperand: mgenc.
@@ -576,6 +771,17 @@ class Parser {
     //        symb := self selector ].
     //    bcGen emit: mgenc pushConstant: symb
     //  )
+    func literalString(_ mgenc: MethodGenerationContext) {
+        self.expect(.pound)
+        var symb: SSymbol
+        if sym == .string {
+            let s = self.string()
+            symb = universe.symbolFor(s)
+        } else {
+            symb = self.selector()
+        }
+        bcGen.emit(mgenc, pushConstant: symb)
+    }
     
     //  literalString: mgenc = (
     //    | s str |
@@ -583,7 +789,12 @@ class Parser {
     //    str := universe newString: s.
     //    bcGen emit: mgenc pushConstant: str
     //  )
-    
+    func literalString(_ mgenc: MethodGenerationContext) {
+        let s = self.string()
+        let str = universe.newString(s: s)
+        bcGen.emit(mgenc, pushConstant: str)
+    }
+
     //  literalNumber: mgenc = (
     //    | lit |
     //    sym == #minus
@@ -592,37 +803,65 @@ class Parser {
     
     //    bcGen emit: mgenc pushConstant: lit
     //  )
+    func literalNumber(_ mgenc: MethodGenerationContext) {
+        var lit: SObject
+        if sym == .minus {
+            lit = self.negativeDecimal()
+        } else {
+            lit = self.literalDecimal(false)
+        }
+        bcGen.emit(mgenc, pushConstant: lit)
+    }
     
     //  negativeDecimal = (
     //    self expect: #minus.
     //    ^ self literalDecimal: true
     //  )
-    
+    func negativeDecimal() -> SObject {
+        self.expect(.minus)
+        return self.literalDecimal(true)
+    }
     //  literalDecimal: isNegative = (
     //    sym == #integer
     //      ifTrue: [^ self literalInteger: isNegative]
     //      ifFalse: [^ self literalDouble: isNegative]
     //  )
+    func literalDecimal(_ isNegative: Bool) -> SObject {
+        if sym == .integer {
+            return self.literalInteger(isNegative)
+        } else {
+            return self.literalDouble(isNegative)
+        }
+    }
+    
     
     //  literalInteger: isNegative = (
     //    | i |
     //    i := Integer fromString: text.
     //    isNegative ifTrue: [
     //      i := i negated].
-    
     //    self expect: #integer.
     //    ^ universe newInteger: i
     //  )
-    
+    func literalInteger(_ isNegative: Bool) -> SInteger {
+        let d = Int(self.text) ?? 0
+        self.expect(.integer)
+        return universe.newInteger(i: d)
+    }
+
     //  literalDouble: isNegative = (
     //    | d |
     //    d := Double fromString: text.
     //    isNegative ifTrue: [
     //      d := d negated ].
-    
     //    self expect: #double.
     //    ^ universe newDouble: d
     //  )
+    func literalDouble(_ isNegative: Bool) -> SDouble {
+        let d = Float(self.text) ?? 0.0
+        self.expect(.double)
+        return universe.newDouble(d: d)
+    }
     
     //  accept: s = (
     //    sym == s ifTrue: [
@@ -664,7 +903,7 @@ class Parser {
     //      ' (' + text + ').\nCurrent parser context: ' + lexer currentTextContext
     //  )
         print("Parsing of \(filename) failed, expected \(s) but found \(sym) \(text)).\nCurrent parser context: \(lexer.currentTextContext())")
-        return false
+        exit(2)
     }
 
     //  expectOneOf: ss = (
@@ -683,11 +922,8 @@ class Parser {
         if self.acceptOneOf(ss) {
             return true
         }
-    //    self error: 'Parsing of ' + filename + ' failed, expected ' + s + ' but found ' + sym +
-    //      ' (' + text + ').\nCurrent parser context: ' + lexer currentTextContext
-    //  )
         print("Parsing of \(filename) failed, expected \(ss) but found \(sym) \(text)).\nCurrent parser context: \(lexer.currentTextContext())")
-        return false
+        exit(2)
     }
 
     //  symIn: ss = (
@@ -704,15 +940,34 @@ class Parser {
     //    (self symIn: Parser binaryOpSyms) ifTrue: [^ true].
     //    ^ false
     //  )
+    func symIsMethod() -> Bool {
+        if sym == .identifier ||
+            sym == .keyword ||
+            sym == .operatorSequence {
+            return true
+        }
+        if self.symIn(Parser.binaryOpSyms) {
+            return true
+        }
+        return false
+    }
     
     //  peekForNextSymbolFromLexer = (
     //    nextSym := lexer peek
     //  )
+    func peekForNextSymbolFromLexer() {
+        self.nextSym = lexer.peek()
+    }
     
     //  peekForNextSymbolFromLexerIfNecessary = (
     //    lexer isPeekDone ifFalse: [
     //      self peekForNextSymbolFromLexer ]
     //  )
+    func peekForNextSymbolFromLexerIfNecessary() {
+        if lexer.isPeekDone() == false {
+            self.peekForNextSymbolFromLexer()
+        }
+    }
     
     //  gen: mgenc popVariable: var = (
     //    | searchResult |
@@ -768,7 +1023,10 @@ class Parser {
     
     //  ----
     //  | singleOpSyms binaryOpSyms keywordSelectorSyms |
-    
+    static let singleOpSyms: [LexerToken] = [.not, .and,
+                                             .or, .star, .div, .mod,
+                                             .plus, .equal, .more, .less,
+                                             .comma, .at, .per, .none]
     //  singleOpSyms = (
     //    singleOpSyms == nil ifTrue: [
     //      singleOpSyms := #(#not #and #or #star #div #mod #plus #equal
@@ -783,12 +1041,16 @@ class Parser {
     //                        #per #none) ].
     //    ^ binaryOpSyms
     //  )
-    
+    static let binaryOpSyms: [LexerToken] = [.or, .comma, .minus, .equal, .not,
+                                             .and, .star, .div,
+                                             .mod, .plus, .more, .less, .at,
+                                             .per, .none]
     //  keywordSelectorSyms = (
     //    keywordSelectorSyms == nil ifTrue: [
     //      keywordSelectorSyms := #(#keyword #keywordSequence) ].
     //    ^ keywordSelectorSyms
     //  )
+    static let keywordSelectorSyms: [LexerToken] = [.keyword, .keywordSequence]
     
     //  newWith: aString for: aFilename in: universe = (
     //    ^ self new initializeWith: aString for: aFilename in: universe

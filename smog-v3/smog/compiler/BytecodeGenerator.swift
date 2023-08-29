@@ -23,7 +23,7 @@ class BytecodeGenerator {
     //  emit: mgenc pushArgument: idx in: ctx = (
     //    self emit: mgenc bc: #pushArgument with: idx and: ctx
     //  )
-    static func pushArgument(_ mgenc: MethodGenerationContext,
+    static func emit(_ mgenc: MethodGenerationContext,
                              pushArgument idx: Int, in ctx: Int) {
         BytecodeGenerator.emit(mgenc, bc: .pushArgument, with: idx, and: ctx)
     }
@@ -52,7 +52,7 @@ class BytecodeGenerator {
     //  emit: mgenc pushBlock: blockMethod = (
     //    self emit: mgenc bc: #pushBlock with: (mgenc addLiteralIfAbsent: blockMethod)
     //  )
-    static func pushBlock(_ mgenc: MethodGenerationContext, blockMethod: Bool) {
+    static func emit(_ mgenc: MethodGenerationContext, pushBlock blockMethod: String) {
         BytecodeGenerator.emit(mgenc, bc: .pushBlock,
                                with: mgenc.addLiteralIfAbsent(blockMethod))
     }
@@ -61,8 +61,8 @@ class BytecodeGenerator {
     //    idx negative ifTrue: [ self error: 'pushLocal: ' + idx asString].
     //    self emit: mgenc bc: #pushLocal with: idx and: ctx
     //  )
-    static func pushLocal(_ mgenc: MethodGenerationContext,
-                             pushArgument idx: Int, in ctx: Int) {
+    static func emit(_ mgenc: MethodGenerationContext,
+                 pushLocal idx: Int, in ctx: Int) {
         if idx < 0 {
             error("pushLocal error, \(idx)")
         }
@@ -84,8 +84,8 @@ class BytecodeGenerator {
     //  emit: mgenc pushGlobal: aSymbol = (
     //    self emit: mgenc bc: #pushGlobal with: (mgenc addLiteralIfAbsent: aSymbol)
     //  )
-    static func pushGlobal(_ mgenc: MethodGenerationContext,
-                             pushArgument idx: Int, in ctx: Int) {
+    static func emit(_ mgenc: MethodGenerationContext,
+                 pushGlobal idx: Int, in ctx: Int) {
         BytecodeGenerator.emit(mgenc, bc: .pushGlobal, with: idx, and: ctx)
     }
 

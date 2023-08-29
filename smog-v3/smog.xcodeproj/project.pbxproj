@@ -9,6 +9,10 @@
 /* Begin PBXBuildFile section */
 		5C83842B2A9B9CBA00E524AA /* Lexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C83842A2A9B9CBA00E524AA /* Lexer.swift */; };
 		5C83842D2A9BBD8C00E524AA /* SourcecodeCompiler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C83842C2A9BBD8C00E524AA /* SourcecodeCompiler.swift */; };
+		5C83842F2A9CFBF000E524AA /* Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C83842E2A9CFBF000E524AA /* Parser.swift */; };
+		5C8384312A9CFC4F00E524AA /* BytecodeGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C8384302A9CFC4F00E524AA /* BytecodeGenerator.swift */; };
+		5C8384332A9D2E9400E524AA /* MethodGenerationContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C8384322A9D2E9400E524AA /* MethodGenerationContext.swift */; };
+		5C8384352A9D366400E524AA /* ClassGenerationContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C8384342A9D366400E524AA /* ClassGenerationContext.swift */; };
 		5C9599C82A8E9E2400B5818A /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C9599C72A8E9E2400B5818A /* main.swift */; };
 		5C9599CF2A8E9ED100B5818A /* SObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C9599CE2A8E9ED100B5818A /* SObject.swift */; };
 		5C9599D32A8E9F3000B5818A /* Protocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C9599D22A8E9F3000B5818A /* Protocols.swift */; };
@@ -55,6 +59,10 @@
 /* Begin PBXFileReference section */
 		5C83842A2A9B9CBA00E524AA /* Lexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lexer.swift; sourceTree = "<group>"; };
 		5C83842C2A9BBD8C00E524AA /* SourcecodeCompiler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourcecodeCompiler.swift; sourceTree = "<group>"; };
+		5C83842E2A9CFBF000E524AA /* Parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parser.swift; sourceTree = "<group>"; };
+		5C8384302A9CFC4F00E524AA /* BytecodeGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BytecodeGenerator.swift; sourceTree = "<group>"; };
+		5C8384322A9D2E9400E524AA /* MethodGenerationContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MethodGenerationContext.swift; sourceTree = "<group>"; };
+		5C8384342A9D366400E524AA /* ClassGenerationContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassGenerationContext.swift; sourceTree = "<group>"; };
 		5C9599C42A8E9E2400B5818A /* smog */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = smog; sourceTree = BUILT_PRODUCTS_DIR; };
 		5C9599C72A8E9E2400B5818A /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		5C9599CE2A8E9ED100B5818A /* SObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SObject.swift; sourceTree = "<group>"; };
@@ -167,6 +175,10 @@
 			isa = PBXGroup;
 			children = (
 				5C959A092A8EC45900B5818A /* CompilerAll.swift */,
+				5C8384342A9D366400E524AA /* ClassGenerationContext.swift */,
+				5C8384322A9D2E9400E524AA /* MethodGenerationContext.swift */,
+				5C8384302A9CFC4F00E524AA /* BytecodeGenerator.swift */,
+				5C83842E2A9CFBF000E524AA /* Parser.swift */,
 				5C83842C2A9BBD8C00E524AA /* SourcecodeCompiler.swift */,
 				5C83842A2A9B9CBA00E524AA /* Lexer.swift */,
 			);
@@ -261,6 +273,7 @@
 				5C959A002A8EC3AA00B5818A /* ObjectPrimitives.swift in Sources */,
 				5C9599F42A8EC2DF00B5818A /* ArrayPrimitives.swift in Sources */,
 				5C9599F22A8EC2B400B5818A /* Primitives.swift in Sources */,
+				5C8384312A9CFC4F00E524AA /* BytecodeGenerator.swift in Sources */,
 				5C9599D52A8EA1F600B5818A /* SClass.swift in Sources */,
 				5C959A0A2A8EC45900B5818A /* CompilerAll.swift in Sources */,
 				5C9599F82A8EC31B00B5818A /* ClassPrimitives.swift in Sources */,
@@ -270,17 +283,20 @@
 				5C9599E72A8EC08D00B5818A /* SDouble.swift in Sources */,
 				5C9599F62A8EC2F800B5818A /* BlockPrimitives.swift in Sources */,
 				5C9599E52A8EC02100B5818A /* Bytescodes.swift in Sources */,
+				5C83842F2A9CFBF000E524AA /* Parser.swift in Sources */,
 				5C9599ED2A8EC18000B5818A /* SPrimitive.swift in Sources */,
 				5C9599D72A8EA47900B5818A /* Universe.swift in Sources */,
 				5C9599EB2A8EC14700B5818A /* SMethod.swift in Sources */,
 				5C9599D32A8E9F3000B5818A /* Protocols.swift in Sources */,
 				5C9599CF2A8E9ED100B5818A /* SObject.swift in Sources */,
 				5C9599D92A8EA49500B5818A /* SSymbol.swift in Sources */,
+				5C8384332A9D2E9400E524AA /* MethodGenerationContext.swift in Sources */,
 				5C83842D2A9BBD8C00E524AA /* SourcecodeCompiler.swift in Sources */,
 				5C9599DB2A8EA4AD00B5818A /* SString.swift in Sources */,
 				5C9599FA2A8EC34200B5818A /* DoublePrimitives.swift in Sources */,
 				5C9599DF2A8EACCD00B5818A /* SBlock.swift in Sources */,
 				5C9599E32A8EBFEF00B5818A /* Frame.swift in Sources */,
+				5C8384352A9D366400E524AA /* ClassGenerationContext.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

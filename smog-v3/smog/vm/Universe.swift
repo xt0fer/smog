@@ -367,7 +367,14 @@ class Universe {
     //        sArr indexableField: i put: (self newString: (strArray at: i))].
     //      ^ sArr
     //    )
-    
+    func newArrayFrom(_ vector: [String]) -> SArray {
+        let result = newArray(size: vector.count)
+        for (i, v) in vector.enumerated() {
+            result.indexableFields[i] = SString(s: v)
+        }
+        return result
+    }
+
     //    newArrayFromVector: vector = (
     //      | result |
     //      "Allocate a new array with the same length as the list"
@@ -380,6 +387,13 @@ class Universe {
     //      "Return the allocated and initialized array"
     //      ^ result
     //    )
+//    func newArrayFrom(_ vector: [String]) -> SArray {
+//        let result = newArray(size: vector.count)
+//        for (i, v) in vector.enumerated() {
+//            result.indexableFields[i] = self.symbolFor(v)
+//        }
+//        return result
+//    }
     
     //    newBlock: method with: context numArgs: arguments = (
     //      ^ SBlock new: method in: context with: (self blockClass: arguments)

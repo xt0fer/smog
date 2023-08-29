@@ -17,6 +17,10 @@ class SSymbol: SString {
 
     }
     
+    convenience init() {
+        self.init(s: "")
+    }
+    
     func determineNumberOfArguments() {
         // Check for binary signature
         if self.isBinarySignature() {

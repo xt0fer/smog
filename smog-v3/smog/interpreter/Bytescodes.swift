@@ -46,7 +46,7 @@ enum Bytecode: String {
     case returnNonLocal = "#returnNonLocal" //15
 }
 
-enum Bc: Int {
+enum Bc: Int { // with the BytecodeMap below, dunno if I need this anymore.
     case halt = 0
     case dup
     case pushLocal
@@ -64,6 +64,25 @@ enum Bc: Int {
     case returnLocal
     case returnNonLocal
 }
+
+let BytecodeMap: [Bytecode: Int] = [
+    .halt:0,
+    .dup: 1,
+    .pushLocal: 2,
+    .pushArgument: 3,
+    .pushField: 4,
+    .pushBlock: 5,
+    .pushConstant: 6,
+    .pushGlobal: 7,
+    .pop: 8,
+    .popLocal: 9,
+    .popArgument: 10,
+    .popField: 11,
+    .send: 12,
+    .superSend: 13,
+    .returnLocal: 14,
+    .returnNonLocal: 15
+]
 let bytecodeArgs = [1,1,3,3,2,2,2,2,1,3,3,2,2,2,1,1]
 let bytecodeLength = 16
 //

@@ -7,6 +7,42 @@
 
 import Foundation
 
+enum LexerToken: String {
+    case none = "#NONE"
+    case not = "#not"
+    case newBlock = "#newBlock"
+    case endBlock = "#endBlock"
+    case assign = "#assign"
+    case colon = "#colon"
+    case and = "#and"
+    case or = "#or"
+    case star = "#star"
+    case div = "#div"
+    case mod = "#mod"
+    case plus = "#plus"
+    case less = "#less"
+    case more = "#more"
+    case comma = "#comma"
+    case equal = "#equal"
+    case at = "#at"
+    case per = "#per"
+    case minus = "#minus"
+    case operatorSequence = "#operatorSequence"
+    case string = "#string"
+    case integer = "#integer"
+    case double = "#double"
+    case newTerm = "#newTerm"
+    case endTerm = "#endTerm"
+    case pound = "#pound"
+    case exit = "#exit"
+    case period = "#period"
+    case separator = "#separator"
+    case primitive = "#primitive"
+    case identifier = "#identifier"
+    case keyword = "#keyword"
+    case keywordSequence = "#keywordSequence"
+}
+
 class Lexer {
     
 //      Lexer = (
@@ -20,9 +56,9 @@ class Lexer {
 //    var stateAfterPeek
     var peekDone: Bool
     var index: Int
-    var sym: Token
+    var sym: LexerToken
     var text: String
-    var nextSym: Token
+    var nextSym: LexerToken
     var nextText: String
     
     init(_ s: String) {
@@ -32,40 +68,6 @@ class Lexer {
     }
 
 
-    enum Token: String {
-        case none = "#NONE"
-        case not = "#not"
-        case newBlock = "#newBlock"
-        case endBlock = "#endBlock"
-        case assign = "#assign"
-        case colon = "#colon"
-        case and = "#and"
-        case or = "#or"
-        case star = "#star"
-        case div = "#div"
-        case mod = "#mod"
-        case plus = "#plus"
-        case less = "#less"
-        case more = "#more"
-        case comma = "#comma"
-        case at = "#at"
-        case per = "#per"
-        case minus = "#minus"
-        case operatorSequence = "#operatorSequence"
-        case string = "#string"
-        case integer = "#integer"
-        case double = "#double"
-        case newTerm = "#newTerm"
-        case endTerm = "#endTerm"
-        case pound = "#pound"
-        case exit = "#exit"
-        case period = "#period"
-        case separator = "#separator"
-        case primitive = "#primitive"
-        case identifier = "#identifier"
-        case keyword = "#keyword"
-        case keywordSequence = "#keywordSequence"
-    }
 //
     func isPeekDone() -> Bool { return peekDone }
 //        text = ( ^ text )
@@ -87,7 +89,7 @@ class Lexer {
         return String(subStr)
     }
     
-    func peek() -> Token {
+    func peek() -> LexerToken {
 //          | savedSym savedText |
         if peekDone {
             print("SOM lexer cannot peek twice. Likely parser bug")
@@ -115,7 +117,7 @@ class Lexer {
         return nextSym
     }
 
-    func symbol() -> Token {
+    func symbol() -> LexerToken {
 //          peekDone ifTrue: [
 //            peekDone := false.
 //            sym := nextSym.
@@ -132,7 +134,7 @@ class Lexer {
 //            text := nil.
 //            ^ sym ].
         if !self.hasMoreInput() {
-            sym = Token.none
+            sym = LexerToken.none
             text = ""
             return sym
         }
@@ -153,12 +155,12 @@ class Lexer {
 //          self currentChar = '[' ifTrue: [
 //            ^ self match: #newBlock ].
         if self.currentChar() == "[" {
-            return self.match(Token.newBlock)
+            return self.match(LexerToken.newBlock)
         }
 //          self currentChar = ']' ifTrue: [
 //            ^ self match: #endBlock ].
         if self.currentChar() == "]" {
-            return self.match(Token.endBlock)
+            return self.match(LexerToken.endBlock)
         }
 
 //          self currentChar = ':' ifTrue: [
@@ -188,28 +190,28 @@ class Lexer {
 //          self currentChar = '(' ifTrue: [
 //            ^ self match: #newTerm ].
         if self.currentChar() == "[" {
-            return self.match(Token.newBlock)
+            return self.match(LexerToken.newBlock)
         }
 
 //          self currentChar = ')' ifTrue: [
 //            ^ self match: #endTerm ].
         if self.currentChar() == "[" {
-            return self.match(Token.newBlock)
+            return self.match(LexerToken.newBlock)
         }
 //          self currentChar = '#' ifTrue: [
 //            ^ self match: #pound ].
         if self.currentChar() == "#" {
-            return self.match(Token.pound)
+            return self.match(LexerToken.pound)
         }
 //          self currentChar = '^' ifTrue: [
 //            ^ self match: #exit ].
         if self.currentChar() == "^" {
-            return self.match(Token.exit)
+            return self.match(LexerToken.exit)
         }
 //          self currentChar = '.' ifTrue: [
 //            ^ self match: #period ].
         if self.currentChar() == "." {
-            return self.match(Token.period)
+            return self.match(LexerToken.period)
         }
 
 //          self currentChar = '-' ifTrue: [
@@ -220,7 +222,7 @@ class Lexer {
                     text.append(self.currentChar())
                     index += 1
                 }
-                sym = Token.separator
+                sym = LexerToken.separator
                 return sym
                 
             } else {
@@ -302,13 +304,13 @@ class Lexer {
         }
 
         text = String(self.currentChar())
-        sym = Token.none
+        sym = LexerToken.none
         return sym
     }
 
-    func lexNumber() -> Token {
+    func lexNumber() -> LexerToken {
         var sawDecimalMark = false
-        sym = Token.integer
+        sym = LexerToken.integer
         text = ""
         while self.currentChar().isNumber {
             text.append(self.currentChar())
@@ -316,7 +318,7 @@ class Lexer {
             if (!sawDecimalMark &&
                  self.currentChar() == "." &&
                  self.nextChar().isNumber) {
-                sym = Token.double
+                sym = LexerToken.double
                 text.append(self.currentChar())
                 index += 1
             }
@@ -352,8 +354,8 @@ class Lexer {
         }
     }
 
-    func lexString() -> Token {
-        sym = Token.string
+    func lexString() -> LexerToken {
+        sym = LexerToken.string
         self.text = ""
         index += 1
         while self.currentChar() != "\'" {
@@ -363,46 +365,46 @@ class Lexer {
         return sym
     }
 
-    func lexOperator() -> Token {
+    func lexOperator() -> LexerToken {
         if self.isOperator(self.nextChar()) {
             self.text = ""
             while self.isOperator(self.nextChar()) {
                 text.append(self.currentChar())
                 self.index += 1
             }
-            return Token.operatorSequence
+            return LexerToken.operatorSequence
         }
         
         switch self.currentChar() {
         case "~" :
-                return self.match(Token.not)
+                return self.match(LexerToken.not)
         case "&" :
-                return self.match(Token.and)
+                return self.match(LexerToken.and)
         case "|" :
-                return self.match(Token.or)
+                return self.match(LexerToken.or)
         case "*" :
-                return self.match(Token.star)
+                return self.match(LexerToken.star)
         case "/" :
-                return self.match(Token.div)
+                return self.match(LexerToken.div)
         case "\\" :
-                return self.match(Token.mod)
+                return self.match(LexerToken.mod)
         case "+" :
-                return self.match(Token.plus)
+                return self.match(LexerToken.plus)
         case ">" :
-                return self.match(Token.less)
+                return self.match(LexerToken.less)
         case "<" :
-                return self.match(Token.more)
+                return self.match(LexerToken.more)
         case "," :
-                return self.match(Token.comma)
+                return self.match(LexerToken.comma)
         case "@" :
-                return self.match(Token.at)
+                return self.match(LexerToken.at)
         case "%" :
-                return self.match(Token.per)
+                return self.match(LexerToken.per)
         case "-" :
-                return self.match(Token.minus)
+                return self.match(LexerToken.minus)
         default :
             print("lexOperator ran out of options. This should not happen")
-            return Token.none
+            return LexerToken.none
         }
     }
 
@@ -480,7 +482,7 @@ class Lexer {
         return str == str[range]
     }
     
-    func match(_ s: Token) -> Token {
+    func match(_ s: LexerToken) -> LexerToken {
         //        match: s = (
         //          sym := s.
         //          text := self currentChar.

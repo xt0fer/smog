@@ -25,7 +25,7 @@ class MethodGenerationContext {
     var finished = false
     var prim = false
     var blockMethod = false
-
+    
     init(aHolderGenc: ClassGenerationContext, aOuterGenc: ClassGenerationContext) {
         self.holderGenc = aHolderGenc
         self.outerGenc = aOuterGenc
@@ -40,38 +40,47 @@ class MethodGenerationContext {
         let b = UInt8(truncatingIfNeeded: code)
         self.bytecode.append(b)
     }
-
-
-//MethodGenerationContext = (
-//             | holderGenc outerGenc
-//               arguments locals literals
-//               signature
-//               finished prim blockMethod
-//               bytecode |
-
-//             initializeWith: aHolderGenc and: aOuterGenc = (
-//               holderGenc := aHolderGenc.
-//               outerGenc := aOuterGenc.
-//               arguments := Vector new.
-//               locals := Vector new.
-//               literals := Vector new.
-//               finished := false.
-//               prim := false.
-//               blockMethod := false.
-//               bytecode := Vector new.
-//             )
-
-//             holder = (
-//               ^ holderGenc
-//             )
-
-//             signature: aSymbol = (
-//               signature := aSymbol
-//             )
+    
+    
+    //MethodGenerationContext = (
+    //             | holderGenc outerGenc
+    //               arguments locals literals
+    //               signature
+    //               finished prim blockMethod
+    //               bytecode |
+    
+    //             initializeWith: aHolderGenc and: aOuterGenc = (
+    //               holderGenc := aHolderGenc.
+    //               outerGenc := aOuterGenc.
+    //               arguments := Vector new.
+    //               locals := Vector new.
+    //               literals := Vector new.
+    //               finished := false.
+    //               prim := false.
+    //               blockMethod := false.
+    //               bytecode := Vector new.
+    //             )
+    
+    //             holder = (
+    //               ^ holderGenc
+    //             )
+    func holder() -> ClassGenerationContext{
+        return self.holderGenc
+    }
+    
+    //             signature: aSymbol = (
+    //               signature := aSymbol
+    //             )
+    func signature(_ symbol: String) {
+        self.signature = symbol
+    }
 
 //             addArgument: aString = (
 //               arguments append: aString
 //             )
+    func addArgument(_ s: String) {
+        self.arguments.append(s)
+    }
 
 //             addArgumentIfAbsent: aString = (
 //               (arguments contains: aString)
@@ -80,10 +89,20 @@ class MethodGenerationContext {
 //               arguments append: aString.
 //               ^ true
 //             )
+    func addArgumentIfAbsent(_ s: String) -> Bool {
+        if arguments.contains(s) {
+            return false
+        }
+        arguments.append(s)
+        return true
+    }
 
 //             numberOfArguments = (
 //               ^ arguments size
 //             )
+    func numberOfArguments() -> Int {
+        return arguments.count
+    }
 
 //             addLocalIfAbsent: aString = (
 //               (locals contains: aString)
@@ -92,6 +111,13 @@ class MethodGenerationContext {
 //               locals append: aString.
 //               ^ true
 //             )
+    func addLocalIfAbsent(_ s: String) -> Bool {
+        if locals.contains(s) {
+            return false
+        }
+        locals.append(s)
+        return true
+    }
 
 //             addLiteralIfAbsent: anAbstractObject = (
 //               | idx |
@@ -122,7 +148,13 @@ class MethodGenerationContext {
 //                 self error: 'updateLiteral saw wrong oldVal, indicates bug in parser' ].
 //               literals at: idx put: newVal
 //             )
-
+    func updateLiteral(_ oldVal: String, at idx: Int, put newVal: String) {
+        if literals[idx] != oldVal {
+            print("updateLiteral saw wrong oldVal, indicates bug in parser")
+        }
+        literals[idx] = newVal
+    }
+    
 //             findVar: var with: searchResult = (
 //               "searchResult: index, context, isArgument"
 //               searchResult at: 1 put: (locals indexOf: var).
@@ -140,31 +172,42 @@ class MethodGenerationContext {
 
 //               ^ true
 //             )
+    func findVar(_ var: String, with searchResult: [Int]) -> Bool {
+        var sr: [Int] = []
+        sr.append(locals.firstIndex(of: var))
+        
+    }
 
 //             markAsFinished = (
 //               finished := true
 //             )
+    func markAsFinished() {self.finished = true}
 
 //             isFinished = (
 //               ^ finished
 //             )
+    func isFinished() -> Bool {return self.finished}
 
 //             markAsPrimitive = (
 //               prim := true
 //             )
+    func markAsPrimitive() {self.prim = true}
 
 //             isBlockMethod = (
 //               ^ blockMethod
 //             )
+    func isBlockMethod() -> Bool { return blockMethod }
 
 //             markAsBlockMethod = (
 //               blockMethod := true
 //             )
+    func markAsBlockMethod() {blockMethod = true}
 
 
 //             removeLastBytecode = (
 //               bytecode remove
 //             )
+    func removeLastBytecode() { bytecode.removeLast() }
 
 //             hasBytecodes = (
 //               ^ bytecode isEmpty not

@@ -94,7 +94,7 @@ class Parser {
     //       self method: mgenc.
     //       cgenc addMethod: (mgenc assemble: universe) ].
     //  )
-    func classDef() {
+    func classBody() {
         self.fields()
         while self.symIsMethod() {
             var mgenc = MethodGenerationContext(cgenc)
@@ -117,6 +117,19 @@ class Parser {
     //    superName string = 'nil' ifFalse: [
     //      self initializeFromSuperClass: superName ].
     //  )
+    func superclass() {
+        var superName = ""
+        if sym == .identifier {
+            superName = universe.symbolFor(text)
+            self.accept(.identifier)
+        } else {
+            superName = universe.symbolFor("Object")
+        }
+        cgenc.superName = superName
+        if superName != "nil" {
+            self.iniializeFromSuperClass(superName)
+        }
+    }
     
     //  initializeFromSuperClass: superName = (
     //    | superClass |
@@ -126,6 +139,15 @@ class Parser {
     //    cgenc instanceFieldsOfSuper: superClass instanceFields.
     //    cgenc classFieldsOfSuper: superClass somClass instanceFields.
     //  )
+    func initializeFromSuperClass(_ superName: String) {
+        let superClass = universe.loadClass(clsname: superName)
+        if superClass.isNil() {
+            print("Was not able to load super class: \(superName) in \(filename)")
+            exit(2)
+        }
+        cgenc.instanceFieldsOfSuper(superClass.instanceFields)
+        cgenc.classFieldsOfSuper(superClass.somClass().instanceFields)
+    }
     
     //  fields = (
     //    (self accept: #or) ifTrue: [
@@ -135,11 +157,29 @@ class Parser {
     //        cgenc addField: (universe symbolFor: var) ].
     //      self expect: #or ]
     //  )
-    
+    func fields() {
+        if self.accept(.identifier) {
+            while sym == .identifier {
+                var v = self.variable()
+                cgenc.addField(universe.symbolFor(v))
+            }
+            self.expect(.or)
+        }
+    }
     //  method: mgenc = (
     //    self pattern: mgenc.
     //    self expect: #equal.
-    
+    func method(_ mgenc: MethodGenerationContext) {
+        self.pattern(mgenc)
+        self.expect(.equal)
+        
+        if sym == .primitive {
+            mgenc.markAsPrimitive()
+            self.primBlock()
+        } else {
+            self.methodBlock(mgenc)
+        }
+    }
     //    sym == #primitive
     //      ifTrue: [
     //        mgenc markAsPrimitive.
@@ -151,6 +191,9 @@ class Parser {
     //  primBlock = (
     //    self expect: #primitive
     //  )
+    func primBlock() {
+        self.expect(.primitive)
+    }
     
     //  pattern: mgenc = (
     //    sym == #identifier ifTrue: [
@@ -159,16 +202,32 @@ class Parser {
     //      ^ self keywordPattern: mgenc ].
     //    self binaryPattern: mgenc
     //  )
+    func pattern(_ mgenc: MethodGenerationContext) {
+        if sym == .identifier {
+            return self.unaryPattern(mgenc)
+        }
+        if sym == .keyword {
+            return self.keywordPattern(mgenc)
+        }
+        self.binaryPattern(mgenc)
+    }
     
     //  unaryPattern: mgenc = (
     //    mgenc signature: self unarySelector
     //  )
+    func unaryPattern(_ mgenc: MethodGenerationContext) {
+        mgenc.signature(self.unarySelector())
+    }
     
     //  binaryPattern: mgenc = (
     //    mgenc signature: self binarySelector.
     //    mgenc addArgumentIfAbsent: self argument
     //  )
-    
+    func binaryPattern(_ mgenc: MethodGenerationContext) {
+        mgenc.signature(self.binarySelector())
+        mgenc.addArgumentIfAbsent(self.argument())
+    }
+
     //  keywordPattern: mgenc = (
     //    | kw |
     //    kw := ''.
@@ -179,7 +238,14 @@ class Parser {
     
     //    mgenc signature: (universe symbolFor: kw)
     //  )
-    
+    func keywordPattern(_ mgenc: MethodGenerationContext) {
+        var kw = ""
+        while sym == .keyword {
+            kw.append(self.keyword())
+            mgenc.addArgumentIfAbsent(self.argument())
+        }
+        mgenc.signature(universe.symbolFor(kw))
+    }
     //  methodBlock: mgenc = (
     //    self expect: #newTerm.
     
@@ -196,6 +262,17 @@ class Parser {
     
     //    self expect: #endTerm.
     //  )
+    func methodBlock(_ mgenc: MethodGenerationContext) {
+        self.expect(.newTerm)
+        self.blockContents(mgenc)
+        if mgenc.isFinished() == false {
+            bcGen.emitPop(mgenc)
+            bcGen.emit(mgenc, pushArgument: 1 in: 0)
+            bcGen.emitReturnNonLocal(mgenc)
+            mgenc.markAsFinished()
+        }
+        self.expect(.endTerm)
+    }
     
     //  blockContents: mgenc = (
     //    (self accept: #or) ifTrue: [
@@ -203,11 +280,23 @@ class Parser {
     //      self expect: #or ].
     //    self blockBody: mgenc sawPeriod: false
     //  )
+    func blockContents(_ mgenc: MethodGenerationContext) {
+        if self.accept(.or) {
+            self.locals(mgenc)
+            self.expect(.or)
+        }
+        self.blockBody(mgenc, sawPeriod: false)
+    }
     
     //  locals: mgenc = (
     //    [sym == #identifier] whileTrue: [
     //      mgenc addLocalIfAbsent: self variable ]
     //  )
+    func locals(_ mgenc: MethodGenerationContext) {
+        while sym == .identifier {
+            mgenc.addLocalIfAbsent(self.variable())
+        }
+    }
     
     //  blockBody: mgenc sawPeriod: seenPeriod = (
     //    (self accept: #exit) ifTrue: [
@@ -244,7 +333,35 @@ class Parser {
     //      bcGen emitPop: mgenc.
     //      self blockBody: mgenc sawPeriod: true ]
     //  )
-    
+    func blockBody(_ mgenc: MethodGenerationContext,
+                   sawPeriod: Bool) -> Parser {
+        if self.accept(.exit) {
+            return self.result(mgenc)
+        }
+        if sym == .endBlock {
+            if sawPeriod {
+                mgenc.removeLastBytecode()
+            }
+            if mgenc.isBlockMethod() && (!mgenc.hasBytecodes()) {
+                let nilSym = universe.symbolFor("nil")
+                bcGen.emit(mgenc, pushGlobal: nilSym)
+            }
+            bcGen.emitReturnLocal(mgenc)
+            mgenc.markAsFinished()
+            return self
+        }
+        if sym == .endTerm {
+            bcGen.emit(mgenc, pushArgument: 1 in: 0)
+            bcGen.emitReturnLocal(mgenc)
+            mgenc.markAsFinished()
+            return self
+        }
+        self.expression(mgenc)
+        if self.accept(.period) {
+            bcGen.emitPop(mgenc)
+            self.blockBody(mgenc, sawPeriod: true)
+        }
+    }
     //  unarySelector = (
     //    ^ universe symbolFor: self identifier
     //  )
@@ -660,12 +777,25 @@ class Parser {
     //        self binaryMessage: mgenc with: superSend.
     //        superSend := false ].
     //  )
-    
+    func formula(_ mgenc: MethodGenerationContext) {
+        var superSend = self.binaryOperand(mgenc)
+        while sym == .operatorSequence ||
+                symIn(Parser.binaryOpSyms) {
+            self.binaryMessage(mgenc, with: superSend)
+            superSend = false
+        }
+    }
+
     //  nestedTerm: mgenc = (
     //    self expect: #newTerm.
     //    self expression: mgenc.
     //    self expect: #endTerm.
     //  )
+    func nestedTerm(_ mgenc: MethodGenerationContext) {
+        self.expect(.newTerm)
+        self.expression(mgenc)
+        self.expect(.endTerm)
+    }
     
     //  nestedBlock: mgenc = (
     //    | blockSig argSize |
@@ -694,11 +824,34 @@ class Parser {
     
     //    self expect: #endBlock
     //  )
+    func nestedBlock(_ mgenc: MethodGenerationContext) {
+        mgenc.addArgumentIfAbsent("$block self")
+        self.expect(.newBlock)
+        if sym == .colon {
+            self.blockPattern(mgenc)
+        }
+        var blockSig = "$block method"
+        var argSize = mgenc.numberOfArguments()
+        for _ in 0..<argSize {
+            blockSig = blockSig + ":"
+        }
+        mgenc.signature(universe.symbolFor(blocksig))
+        self.blockContents(mgenc)
+        if mgenc.isFinished == false {
+            bcGen.emitReturnLocal(mgenc)
+            mgenc.markAsFinished
+        }
+        self.expect(.endBlock)
+    }
     
     //  blockPattern: mgenc = (
     //    self blockArguments: mgenc.
     //    self expect: #or.
     //  )
+    func blockPattern(_ mgenc: MethodGenerationContext) {
+        self.blockArguments(mgenc)
+        self.expect(.or)
+    }
     
     //  blockArguments: mgenc = (
     //    self expect: #colon.
@@ -708,6 +861,15 @@ class Parser {
     //      self expect: #colon.
     //      mgenc addArgumentIfAbsent: self argument ]
     //  )
+    func blockArguments(_ mgenc: MethodGenerationContext) {
+        self.expect(.colon)
+        mgenc.addArgumentIfAbsent(self.argument())
+        while sym == .colon {
+            self.expect(.colon)
+            mgenc.addArgumentIfAbsent(self.argument())
+        }
+    }
+
     
     //  literal: mgenc = (
     //    sym == #pound ifTrue: [
@@ -723,6 +885,22 @@ class Parser {
     
     //    self literalNumber: mgenc
     //  )
+    func literal(_ mgenc: MethodGenerationContext) {
+        if sym == .pound {
+            self.peekForNextSymbolFromLexerIfNecessary()
+            if nextSym == .newTerm {
+                self.literalArray(mgenc)
+            } else {
+                self.literalSymbol(mgenc)
+            }
+            return self //??
+        }
+        if sym == .string {
+            self.literalString(mgenc)
+            return self
+        }
+        self.literalNumber(mgenc)
+    }
     
     //  literalArray: mgenc = (
     //    | arrayClassName arraySizePlaceholder
@@ -758,6 +936,32 @@ class Parser {
     //    mgenc updateLiteral: arraySizePlaceholder at: arraySizeLiteralIndex put: (universe newInteger: i - 1).
     //    self expect: #endTerm.
     //  )
+    func literalArray(_ mgenc: MethodGenerationContext) {
+        self.expect(.pound)
+        self.expect(.newTerm)
+        
+        let arrayClassName = universe.symbolFor("Array")
+        let arraySizePlaceholder = universe.symbolFor("ArraySizeLiteralPlaceholder")
+        let newMessage = universe.symbolFor("new:")
+        let atPutMessage = universe.symbolFor("at:put:")
+        let arraySizeLiteralIndex = mgenc.addLiteral(arraySizePlaceholder)
+        
+        bcGen.emit(mgenc, pushGlobal: arrayClassName)
+        bcGen.emit(mgenc, pushConstantIdx: arraySizeLiteralIndex)
+        bcGen.emit(mgenc, send: newMessage)
+        
+        var i = 1
+        while (sym == .endTerm) == false {
+            var pushIndex = universe.newInteger(i: i)
+            bcGen.emit(mgenc, pushConstant: pushIndex)
+            self.literal(mgenc)
+            bcGen.emit(mgenc, send: atPutMessage)
+            i += 1
+        }
+        mgenc.updateLiteral(arraySizePlaceholder, at: arraySizeLiteralIndex,
+                            put: universe.newInteger(i: i-1))
+        self.expect(.endTerm)
+    }
     
     //  literalSymbol: mgenc = (
     //    | symb |
@@ -771,7 +975,7 @@ class Parser {
     //        symb := self selector ].
     //    bcGen emit: mgenc pushConstant: symb
     //  )
-    func literalString(_ mgenc: MethodGenerationContext) {
+    func literalSymbol(_ mgenc: MethodGenerationContext) {
         self.expect(.pound)
         var symb: SSymbol
         if sym == .string {

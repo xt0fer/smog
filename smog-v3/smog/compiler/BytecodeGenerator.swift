@@ -85,8 +85,8 @@ class BytecodeGenerator {
     //    self emit: mgenc bc: #pushGlobal with: (mgenc addLiteralIfAbsent: aSymbol)
     //  )
     static func emit(_ mgenc: MethodGenerationContext,
-                 pushGlobal idx: Int, in ctx: Int) {
-        BytecodeGenerator.emit(mgenc, bc: .pushGlobal, with: idx, and: ctx)
+                     pushGlobal symbol: String) {
+        BytecodeGenerator.emit(mgenc, bc: .pushGlobal, with: mgenc.addLiteralIfAbsent(symbol))
     }
 
     //  emit: mgenc popArgument: idx in: ctx = (
@@ -158,8 +158,8 @@ class BytecodeGenerator {
     //  emit: mgenc pushConstantIdx: anInteger = (
     //    self emit: mgenc bc: #pushConstant with: anInteger
     //  )
-    static func emit(_ mgenc: MethodGenerationContext, constantIdx: Int) {
-        emit(mgenc, bc: .pushConstant, with: constantIdx)
+    static func emit(_ mgenc: MethodGenerationContext, pushConstantIdx: Int) {
+        emit(mgenc, bc: .pushConstant, with: pushConstantIdx)
     }
 
     //  emit: mgenc bc: aSymbol = (

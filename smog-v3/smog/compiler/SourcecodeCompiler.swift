@@ -28,10 +28,10 @@ class SourcecodeCompiler {
     //  )
     func compileClass(_ path: String, name fileName: String, into systemClass: SClass, in universe: Universe) -> ClassGenerationContext? {
         let fname = path + "/" + fileName + ".som"
-        let parser = Parser.Load(fname, in: universe)
-        if parser.isNil() {
-            return nil
-        }
+        let parser = Parser.load(fname, in: universe)
+//        if parser.isNil() {
+//            return nil
+//        }
         let result = self.compile(parser, into: systemClass)
         
         let cname = result.name.asString()
@@ -46,10 +46,10 @@ class SourcecodeCompiler {
     //    parser := Parser newWith: stmt for: '$string$' in: universe.
     //    ^ self compile: parser into: systemClass.
     //  )
-    func compileClass(_ stmt: String, into systemclass: SClass, in universe: Universe) -> ClassGenerationContext? {
-        let parser = Parser.newWith(stmt, forString: "$string$", in: universe)
-        return self.compile(parser, into: systemclass)
-    }
+//    func compileClass(_ stmt: String, into systemclass: SClass, in universe: Universe) -> ClassGenerationContext? {
+//        let parser = Parser.newWith(stmt, forString: "$string$", in: universe)
+//        return self.compile(parser, into: systemclass)
+//    }
 
     //  compile: parser into: systemClass = (
     //    | cgc |
@@ -59,13 +59,15 @@ class SourcecodeCompiler {
     //      ifFalse: [ ^ cgc assembleSystemClass: systemClass ]
     //  )
     //)
-    func compile(_ parser: Parser, into sysclass: SClass) -> ClassGenerationContext? {
-        var cgc = parser.classdef()
+    func compile(_ parser: Parser, into sysclass: SClass) -> ClassGenerationContext {
+        var cgc = parser.classDef()
         
-        if sysclass.isNil() {
-            return cgc.assemble()
-        } else {
-            return cgc.assembleSystemClass(sysclass)
-        }
+//        if sysclass.isNil() {
+//            return cgc.assemble()
+//        } else {
+//            return cgc.assembleSystemClass(sysclass)
+//        }
+        
+        return cgc
     }
 }

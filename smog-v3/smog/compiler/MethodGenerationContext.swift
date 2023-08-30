@@ -173,9 +173,15 @@ class MethodGenerationContext {
 //               ^ true
 //             )
     func findVar(_ var: String, with searchResult: [Int]) -> Bool {
-        var sr: [Int] = []
-        sr.append(locals.firstIndex(of: var))
-        
+//        var sr: [Int] = []
+//        sr.append(locals.firstIndex(of: var))
+//        if sr[0] == -1 {
+//            searchResult[0] = arguments.firstIndex(of: var)
+//            if sr[0] == -1 {
+//
+//            }
+//        }
+        return false
     }
 
 //             markAsFinished = (

@@ -97,7 +97,7 @@ class Parser {
     func classBody() {
         self.fields()
         while self.symIsMethod() {
-            var mgenc = MethodGenerationContext(cgenc)
+            var mgenc = MethodGenerationContext(aHolderGenc: cgenc)
             mgenc.addArgument("self")
             self.method(mgenc)
             cgenc.addMethod(mgenc.assemble(universe))
@@ -1267,5 +1267,29 @@ class Parser {
     
     //    ^ self new initializeWith: fileContent for: aFileName in: universe
     //  )
+    static func load(_ fname: String, in: Universe) -> Parser {
+        let fileContent = Parser.loadFile(fname: fname)
+        
+        if fileContent == "" {
+            print("not content in input file")
+            exit(3)
+        }
+        return Parser(fileContent, for: fname, in: Universe.shared)
+    }
+    
+    static func loadFile(fname: String) -> String {
+        // Set the file path
+        let path = fname
+        do {
+            // Get the contents
+            let contents = try String(contentsOfFile: path, encoding: .utf8)
+            print(contents)
+            return contents
+        }
+        catch let error as NSError {
+            print("Ooops! Unable to read file: \(error)")
+        }
+    }
+
     //)
 } // PARSER

@@ -21,10 +21,14 @@ print("Hello, World!")
 //)
 
 struct Main {
+    
     func run(args: [String]) {
         let u = Universe()
         let args2 = args.suffix(1)
-        u.interpret(args2)
+        
+        //u.interpret(args2)
+        u.i
+        
         u.exit(0)
     }
 }

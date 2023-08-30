@@ -243,6 +243,8 @@ class MethodGenerationContext {
 //                 ifFalse: [
 //                   ^ self assembleMethod: universe ]
 //             )
+    func assemble(_ u: Universe) {}
+    func assembleMethod(_ u: Universe) {}
 
 //             assembleMethod: universe = (
 //               | numLocals meth i |

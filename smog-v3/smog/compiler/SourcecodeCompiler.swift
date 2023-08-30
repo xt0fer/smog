@@ -26,7 +26,7 @@ class SourcecodeCompiler {
     //          + ' does not match class name (' + cname + ') in it.' ].
     //    ^ result
     //  )
-    func compileClass(_ path: String, name fileName: String, into systemClass: SClass, in universe: Universe) -> ClassGenerationContext? {
+    func compileClass(_ path: String, name fileName: String, into systemClass: SClass, in universe: Universe) -> ClassGenerationContext {
         let fname = path + "/" + fileName + ".som"
         let parser = Parser.load(fname, in: universe)
 //        if parser.isNil() {
@@ -60,6 +60,8 @@ class SourcecodeCompiler {
     //  )
     //)
     func compile(_ parser: Parser, into sysclass: SClass) -> ClassGenerationContext {
+        
+        // START look for a class Def.
         var cgc = parser.classDef()
         
 //        if sysclass.isNil() {

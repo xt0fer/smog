@@ -116,7 +116,7 @@ class Interpreter {
     func doPushGlobal(idx: Int) {
         if let frame = self.frame {
             let globalName = frame.method.constant(bcIndex: idx)
-            let global = Universe.shared.global(symbol: globalName as! SSymbol)
+            let global = Universe.shared.global(globalName as! SSymbol)
             if global != Universe.shared.nilObject {
                 frame.push(obj: global)
             } else {
@@ -399,6 +399,7 @@ class Interpreter {
         }
         //    self error: 'Unknown bytecode' + bytecode asString
         print("Unknown bytecode \(bytecode!.rawValue)")
+        return Universe.shared.nilObject
     }
     //
     //  pushNewFrame: method with: contextFrame = (
@@ -406,7 +407,7 @@ class Interpreter {
     //    ^ frame
     //  )
     func pushNewFrame(invokable: Invokable, withContextFrame: Frame?) -> Frame {
-        let f = Universe.shared.newFrame(previousFrame: self.frame!, method: method, withContextFrame: withContextFrame)
+        let f = Universe.shared.newFrame(previousFrame: self.frame!, method: invokable, withContextFrame: withContextFrame)
         return f
     }
     //
@@ -436,6 +437,7 @@ class Interpreter {
             
             return frame.outerContext().argument(idx: 1, at: 0)
         }
+        return Universe.shared.nilObject
     }
     //
     //  send: selector rcvrClass: receiverClass = (

@@ -26,9 +26,12 @@ struct Main {
         let u = Universe()
         let args2 = args.suffix(1)
         
-        //u.interpret(args2)
-        u.i
+        u.interpret(args2)
+        
         
         u.exit(0)
     }
 }
+
+Main().run(args: ["Hello"])
+

@@ -8,6 +8,10 @@
 import Foundation
 
 class SMethod: SObject, Invokable {
+    func isNil() -> Bool {
+        return false
+    }
+    
     
     var signatureSym: SSymbol
     var holderClass: SClass

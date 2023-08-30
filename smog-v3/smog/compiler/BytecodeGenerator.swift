@@ -118,7 +118,7 @@ class BytecodeGenerator {
     //    self emit: mgenc bc: #popField with: (mgenc fieldIndex: aSymbol)
     //  )
     static func emit(_ mgenc: MethodGenerationContext,
-                     popField symbol: Int) {
+                     popField symbol: String) {
         if !mgenc.hasField(symbol) {
             error("popField: field unknown, \(symbol)")
         }
@@ -129,7 +129,7 @@ class BytecodeGenerator {
     //    self emit: mgenc bc: #superSend with: (mgenc addLiteralIfAbsent: aSymbol)
     //  )
     static func emit(_ mgenc: MethodGenerationContext,
-                     superSend symbol: Int) {
+                     superSend symbol: String) {
         if !mgenc.hasField(symbol) {
             error("popField: field unknown, \(symbol)")
         }
@@ -141,7 +141,7 @@ class BytecodeGenerator {
     //    self emit: mgenc bc: #send with: (mgenc addLiteralIfAbsent: aSymbol)
     //  )
     static func emit(_ mgenc: MethodGenerationContext,
-                     send symbol: Int) {
+                     send symbol: String) {
         if !mgenc.hasField(symbol) {
             error("send: field unknown, \(symbol)")
         }
@@ -151,8 +151,9 @@ class BytecodeGenerator {
     //  emit: mgenc pushConstant: anAbstractObject = (
     //    self emit: mgenc bc: #pushConstant with: (mgenc addLiteralIfAbsent: anAbstractObject)
     //  )
-    static func emit(_ mgenc: MethodGenerationContext, pushConstant: SObject) {
-        emit(mgenc, bc: .pushConstant, with: mgenc.addLiteralIfAbsent(anAbstractObject))
+    static func emit(_ mgenc: MethodGenerationContext, pushConstant constant: SObject) {
+       // emit(mgenc, bc: .pushConstant, with: mgenc.addLiteralIfAbsent(constant))
+        exit(-10)
     }
 
     //  emit: mgenc pushConstantIdx: anInteger = (

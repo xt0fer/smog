@@ -184,8 +184,8 @@ class ClassGenerationContext {
     //    ^ systemClass
     //  )
     func assembleSystemClass(_ systemClass: SClass) {
-        systemClass.instanceInvokables( universe.newArrayFrom(instanceMethods))
-        systemClass.instanceFields( universe.newArrayFrom(instanceFields))
+//        systemClass.instanceInvokables( universe.newArrayFrom(instanceMethods))
+//        systemClass.instanceFields( universe.newArrayFrom(instanceFields))
         
         
     }

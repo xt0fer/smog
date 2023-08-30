@@ -8,6 +8,10 @@
 import Foundation
 
 class SBlock: SObject, Invokable {
+    func isNil() -> Bool {
+        return true
+    }
+    
     func isPrimitive() -> Bool {
         false
     }
@@ -41,6 +45,7 @@ class SBlock: SObject, Invokable {
         self.method = aSMethod
         self.context = aContext
         self.blockClass = aBlockClass
+        self.holderClass = Universe.shared.objectClass
         super.init(nArgs: 0, clazz: Universe.shared.blockClass)
         self.debugSDesc = "SBlock()"
     }
@@ -62,7 +67,8 @@ class SBlock: SObject, Invokable {
     //        newFrame copyArgumentsFrom: frame ]
     //  )
     static func evaluationPrimitive(_ numberOfArguments: Int, universe: Universe) -> SPrimitive {
-        return SPrimitive(aSSymbol: <#SSymbol#>, block: <#SBlock#>)
+        //return SPrimitive(aSSymbol: <#SSymbol#>, block: <#SBlock#>)
+        return SPrimitive(aSSymbol: universe.symbolFor("Nil"), block: universe.nilObject as! SBlock)
     }
     
     func computeSignatureString(numberOfArguments: Int) -> String {

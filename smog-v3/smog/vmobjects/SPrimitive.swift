@@ -8,6 +8,10 @@
 import Foundation
 
 class SPrimitive: SObject, Invokable {
+    func isNil() -> Bool {
+        return false
+    }
+    
     
     var signatureSym: SSymbol
     var holderClass: SClass
@@ -46,7 +50,7 @@ class SPrimitive: SObject, Invokable {
 //        return Universe.shared.nilObject //Block operation value: frame with: interp
 //    }
     func invoke(frame: Frame,  using interpreter: Interpreter) {
-        let newFrame = interpreter.pushNewFrame(method: self)
+        let newFrame = interpreter.pushNewFrame(invokable: self)
         newFrame.copyArgumentsFrom(frame: frame)
     }
 

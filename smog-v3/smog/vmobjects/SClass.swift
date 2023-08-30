@@ -31,11 +31,16 @@ class SClass: SObject {
     var invokeCache: [SSymbol:Invokable] = [:]
 
     init(_ u: Universe) {
+        self.universe = u
+        self.superClass = universe.objectClass
+        self.name = universe.symbolFor("Class")
         super.init(nArgs: 0, clazz: u.classClass)
     }
 
     init(_ numberOfFields: Int, u: Universe) {
         self.universe = u
+        self.superClass = universe.objectClass
+        self.name = universe.symbolFor("Class")
         super.init(nArgs: numberOfFields, clazz: u.classClass)
         debugSDesc = "SClass()"
     }
@@ -120,11 +125,11 @@ class SClass: SObject {
         }
         if self.hasSuperClass() {
             let invokable = superClass.lookupInvokable(signature: signature)
-            if !(invokable == Universe.shared.nilObject) {
+            if !(invokable.isNil()) {
                 return invokable
             }
         }
-        return Universe.shared.nilObject
+        return Universe.shared.nilObject as! Invokable
     }
 
 //      lookupFieldIndex: fieldName = {
@@ -184,9 +189,9 @@ class SClass: SObject {
 //          Universe println: ' is not in class definition for class ' + name string ]
 //      }
     func addInstancePrimitive(_ value: SPrimitive, dontWarn: Bool) {
-        value.holder(self)
+        value.holder(value: self)
         if (self.addInstanceInvokable(value as! Invokable) && !dontWarn) {
-            print("Warning: Primitive \(String(describing: value.signature.string))")
+            print("Warning: Primitive \(String(describing: value.signature().string))")
             print(" is not in class definition for class ' + name string")
         }
     }

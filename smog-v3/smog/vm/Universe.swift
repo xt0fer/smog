@@ -21,7 +21,6 @@ class Universe {
         self.dumpBytecodes = false
         self.avoidExit = false
         
-        self.initializeObjectSystem()
     }
     
     
@@ -86,7 +85,7 @@ class Universe {
     func exit(_ errorCode: Int) {
         if self.avoidExit {
             self.lastExitCode = errorCode
-            exitBlock.value(errorCode)
+            ///exitBlock.value(errorCode)
         } else {
             self.errorExit("Failed with code \(errorCode)")
         }
@@ -147,8 +146,8 @@ class Universe {
     
     //      ^ remainingArgs asArray
     //    )
-    func handleArguments(_ args: [String]) {
-        
+    func handleArguments(_ args: [String]) -> [String]{
+        return args
     }
     
     //    pathClassExtension: str = (
@@ -174,15 +173,16 @@ class Universe {
     //        ifTrue: [ ^ result integer ]
     //        ifFalse: [ ^ 1 ]
     //    )
+    
     func interpret(_ args: [String]) -> Int {
-        let remainingArgs = self.handleArguments(args)
-        let result = self.initializeInterpreter(remainingArgs)
-        if result.clazz.name == "SInteger" {
-            result.integer()
-        }
-        else {
-            return 1
-        }
+//        let remainingArgs = self.handleArguments(args)
+//        let result = self.initializeInterpreter(remainingArgs)
+//        if result.clazz.name == "SInteger" {
+//            result.integer()
+//        }
+//        else {
+//            return 1
+//        }
     }
     
     //    interpret: className with: selector = (
@@ -200,7 +200,7 @@ class Universe {
     //      ^ self interpret: initialize in: clazz with: nil
     //    )
     func interpret(_ className: String, with: String) {
-        self.initializeObjectSystem()
+        let syscls = self.initializeObjectSystem()
         var clazz = self.loadClass(clsname: self.symbolFor(className))
         let initialize = (clazz.somClassIn(self).lookupInvokable(signature: self.symbolFor(with)))
         if initialize.isNil() {
@@ -227,6 +227,9 @@ class Universe {
     
     //      ^ self interpret: initialize in: systemObject with: argumentsArray
     //    )
+    func initializeInterpreter(_ arguments: [String]) {
+        
+    }
     
     //    createBootstrapMethod = (
     //      | bootstrapMethod |
@@ -431,15 +434,17 @@ class Universe {
     //      "Return the freshly allocated frame"
     //      ^ result
     //    )
-    func newFrame(previousFrame: Frame, method: SMethod, withContextFrame: Frame?) -> Frame {
+    func newFrame(previousFrame: Frame, method: Invokable, withContextFrame: Frame?) -> Frame {
         //      "Compute the maximum number of stack locations (including arguments,
         //       locals and extra buffer to support doesNotUnderstand) and set the number
         //       of indexable fields accordingly"
-        let length = method.numberOfArguments()
-        + method.numberOfLocals
-        + method.maximumNumberOfStackElements + 2
-        let result = Frame(with: nilObject, previousFrame: previousFrame, contextFrame: withContextFrame, method: method, maxStack: length)
-        return result
+        if let method = method as? SMethod {
+            let length = method.numberOfArguments()
+            + method.numberOfLocals
+            + method.maximumNumberOfStackElements + 2
+            let result = Frame(with: nilObject, previousFrame: previousFrame, contextFrame: withContextFrame, method: method, maxStack: length)
+            return result
+        }
     }
     
     //    newSymbol: aString = (

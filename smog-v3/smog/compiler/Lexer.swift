@@ -65,6 +65,10 @@ class Lexer {
         self.fileContent = s
         self.peekDone = false
         self.index = 1
+        self.sym = .none
+        self.text = ""
+        self.nextSym = .none
+        self.nextText = ""
     }
 
 

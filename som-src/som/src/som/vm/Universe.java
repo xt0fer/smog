@@ -642,7 +642,11 @@ public class Universe
   {
     // Load the system class
     Class result = loadClass(systemClass.getName(), systemClass);
+    if (result == null) {
+        System.out.println(systemClass.getName().getString());
 
+          System.out.println(" failed: loadClass(systemClass.getName(), systemClass)");
+    }
     // Load primitives if necessary
     if(result.hasPrimitives()) result.loadPrimitives();
   }
@@ -668,6 +672,9 @@ public class Universe
     }
 
     // The class could not be found.
+    System.out.println(name.getString());
+    System.out.println(" The class could not be found");
+
     return null;
   }
 

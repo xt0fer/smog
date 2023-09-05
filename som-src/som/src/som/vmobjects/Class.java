@@ -268,7 +268,7 @@ public class Class extends Object
     try { 
       java.lang.Class<?> primitivesClass = java.lang.Class.forName(className);
       try {
-        ((Primitives) primitivesClass.newInstance()).installPrimitivesIn(this);
+        ((Primitives) primitivesClass.getDeclaredConstructor().newInstance()).installPrimitivesIn(this);
       } catch (Exception e) {
         System.out.println("Primitives class " + className + " cannot be instantiated");
       }

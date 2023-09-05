@@ -9,6 +9,14 @@ This is a passion project, re-implementing it in [Go](https://go.dev) (golang).
 
 I'd like to make a simple interpreter (bytecode) for the SOM language.
 
+## Running SOM 
+
+```
+/usr/bin/env ....../Library/Java/JavaVirtualMachines/corretto-11.0.17/Contents/Home/bin/java  -cp som/bin vm.Universe -cp Smalltalk -d Hello.som >& Hello.txt
+```
+
+Also, `brew install ant`, that way you can build the Java version using the `build.xml` file.
+
 ## SOM
 
 I have included the source for the java version of SOM in `som/`

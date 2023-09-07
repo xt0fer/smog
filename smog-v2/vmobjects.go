@@ -53,7 +53,7 @@ type ClassInterface interface {
 	setInstanceInvokables(aSArray ArrayInterface)                         // set the invokables array
 	NumberOfInstanceInvokables() int32                                    // get size of invokables array
 	InstanceInvokable(idx int32) ObjectInterface                          // get invokable at idx
-	InstanceInvokablePut(idx int32, aSInvokable Invokable)                // set invokable at idx
+	InstanceInvokablePut(idx int32, aSInvokable *Invokable)                // set invokable at idx
 	LookupInvokable(signature *String) ObjectInterface                    // get invokable by symbol name
 	LookupFieldIndex(fieldName ObjectInterface) int32                     // get index of invokable by name
 	AddInstanceInvokable(value ObjectInterface)                           // add an Invokable method to array

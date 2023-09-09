@@ -2,7 +2,6 @@ package smog
 
 import (
 	"fmt"
-	"math/big"
 	"os"
 	"strconv"
 	"strings"
@@ -38,6 +37,7 @@ type Universe struct {
 	StringClass     *Class
 	BlockClass      *Class
 	DoubleClass     *Class
+	Shell           *Shell
 }
 
 var instantiated *Universe
@@ -69,23 +69,12 @@ func (u *Universe) initUniverse() {
 	u.symboltable = NewSymbolTable()
 }
 
-// func (u *Universe) NewArray(size int) *Array {
-// 	return NewArray(size)
-// }
-
 func (u *Universe) SymbolFor(sym string) *Symbol {
 	result := u.symboltable.lookup(sym)
 	if result != nil {
 		return result
 	}
 	result = u.NewSymbol(sym)
-	return result
-}
-
-func (u *Universe) NewSymbol(sym string) *Symbol {
-	result := NewSymbol(sym)
-	result.setClass(u.SymbolClass)
-	u.symboltable.insert(result)
 	return result
 }
 
@@ -300,110 +289,158 @@ func (u *Universe) PrintUsageAndExit() {
 
 // private static void initialize(java.lang.String[] arguments)
 // {
-//   // Allocate the nil object
-//   nilObject = new Object();
+func (u *Universe) initialize(arguments []string) {
+	// Allocate the nil object
+	u.NilObject = NewObject(-1)
+	// Allocate the Metaclass classes
+	u.MetaclassClass = u.NewMetaclassClass()
+	// Allocate the rest of the system classes
+	u.ObjectClass = u.NewSystemClass()
+	u.NilClass = u.NewSystemClass()
+	u.ClassClass = u.NewSystemClass()
+	u.ArrayClass = u.NewSystemClass()
+	u.SymbolClass = u.NewSystemClass()
+	u.MethodClass = u.NewSystemClass()
+	u.IntegerClass = u.NewSystemClass()
+	u.BigIntegerClass = u.NewSystemClass()
+	u.FrameClass = u.NewSystemClass()
+	u.PrimitiveClass = u.NewSystemClass()
+	u.StringClass = u.NewSystemClass()
+	u.DoubleClass = u.NewSystemClass()
 
-//   // Allocate the Metaclass classes
-//   metaclassClass = newMetaclassClass();
+	//   // Setup the class reference for the nil object
+	u.NilObject.SetClass(u.NilClass)
 
-//   // Allocate the rest of the system classes
-//   objectClass    = newSystemClass();
-//   nilClass       = newSystemClass();
-//   classClass     = newSystemClass();
-//   arrayClass     = newSystemClass();
-//   symbolClass    = newSystemClass();
-//   methodClass    = newSystemClass();
-//   integerClass   = newSystemClass();
-//   bigintegerClass= newSystemClass();
-//   frameClass     = newSystemClass();
-//   primitiveClass = newSystemClass();
-//   stringClass    = newSystemClass();
-//   doubleClass    = newSystemClass();
+	// // Initialize the system classes.
+	// // Note: The order in which the system classes are initialized is important
+	// //       since their names are used to bootstrap the system.
+	// initializeSystemClass(objectClass    , null         , "Object"    );
+	// initializeSystemClass(classClass     , objectClass , "Class"     );
+	// initializeSystemClass(metaclassClass , classClass  , "Metaclass" );
+	// initializeSystemClass(nilClass       , objectClass , "Nil"       );
+	// initializeSystemClass(arrayClass     , objectClass , "Array"     );
+	u.initializeSystemClass(u.ObjectClass, nil, "Object")
+	u.initializeSystemClass(u.ClassClass, u.ObjectClass, "Class")
+	u.InitializeSystemClass(u.MetaclassClass, u.ClassClass, "Metaclass")
+	u.InitializeSystemClass(u.NilClass, u.ObjectClass, "Nil")
+	u.InitializeSystemClass(u.ArrayClass, u.ObjectClass, "Array")
+	// initializeSystemClass(methodClass    , arrayClass  , "Method"    );
+	// initializeSystemClass(symbolClass    , objectClass , "Symbol"    );
+	// initializeSystemClass(integerClass   , objectClass , "Integer"   );
+	// initializeSystemClass(bigintegerClass, objectClass , "BigInteger");
+	u.InitializeSystemClass(u.MethodClass, u.ArrayClass, "Method")
+	u.InitializeSystemClass(u.SymbolClass, u.ObjectClass, "Symbol")
+	u.InitializeSystemClass(u.IntegerClass, u.ObjectClass, "Integer")
+	u.InitializeSystemClass(u.BigIntegerClass, u.ObjectClass, "BigInteger")
 
-//   // Setup the class reference for the nil object
-//   nilObject.setClass(nilClass);
+	// initializeSystemClass(frameClass     , arrayClass  , "Frame"     );
+	// initializeSystemClass(primitiveClass , objectClass , "Primitive" );
+	// initializeSystemClass(stringClass    , objectClass , "String"    );
+	// initializeSystemClass(doubleClass    , objectClass , "Double"    );
+	u.InitializeSystemClass(u.FrameClass, u.ArrayClass, "Frame")
+	u.InitializeSystemClass(u.PrimitiveClass, u.ObjectClass, "Primitive")
+	u.InitializeSystemClass(u.StringClass, u.ObjectClass, "String")
+	u.InitializeSystemClass(u.DoubleClass, u.ObjectClass, "Double")
+	// // Load methods and fields into the system classes
+	// loadSystemClass(objectClass);
+	loadSystemClass(u.ObjectClass)
+	// loadSystemClass(classClass);
+	// loadSystemClass(metaclassClass);
+	// loadSystemClass(nilClass);
+	// loadSystemClass(arrayClass);
+	loadSystemClass(u.ClassClass)
+	loadSystemClass(u.MetaclassClass)
+	loadSystemClass(u.NilClass)
+	loadSystemClass(u.ArrayClass)
+	// loadSystemClass(methodClass);
+	// loadSystemClass(symbolClass);
+	// loadSystemClass(integerClass);
+	// loadSystemClass(bigintegerClass);
+	loadSystemClass(u.MethodClass)
+	loadSystemClass(u.SymbolClass)
+	loadSystemClass(u.IntegerClass)
+	loadSystemClass(u.BigIntegerClass)
+	// loadSystemClass(frameClass);
+	// loadSystemClass(primitiveClass);
+	// loadSystemClass(stringClass);
+	loadSystemClass(u.FrameClass)
+	loadSystemClass(u.PrimitiveClass)
+	loadSystemClass(u.StringClass)
+	// loadSystemClass(doubleClass);
+	loadSystemClass(u.DoubleClass)
+	// // Load the generic block class
+	// blockClass = loadClass(symbolFor("Block"));
+	u.BlockClass = u.LoadClass(u.SymbolFor("Block"))
+	// // Setup the true and false objects
+	// trueObject = newInstance(loadClass(symbolFor("True")));
+	u.TrueObject = instantiated.NewInstance(u.LoadClass(u.SymbolFor("True")))
+	// falseObject = newInstance(loadClass(symbolFor("False")));
+	u.FalseObject = instantiated.NewInstance(u.LoadClass(u.SymbolFor("False")))
+	// // Load the system class and create an instance of it
+	// systemClass = loadClass(symbolFor("System"));
+	u.SystemClass = u.LoadClass(u.SymbolFor("System"))
+	// Object systemObject = newInstance(systemClass);
+	u.SystemObject = u.NewInstance(u.SystemClass)
+	// // Put special objects and classes into the dictionary of globals
+	// setGlobal(symbolFor("nil"), nilObject);
+	u.SetGlobal(u.SymbolFor("nil"), u.NilObject)
+	// setGlobal(symbolFor("true"), trueObject);
+	u.SetGlobal(u.SymbolFor("true"), u.TrueObject)
+	// setGlobal(symbolFor("false"), falseObject);
+	u.SetGlobal(u.SymbolFor("false"), u.FalseObject)
+	// setGlobal(symbolFor("system"), systemObject);
+	u.SetGlobal(u.SymbolFor("system"), u.SystemObject)
+	// setGlobal(symbolFor("System"), systemClass);
+	u.SetGlobal(u.SymbolFor("System"), u.SystemClass)
+	// setGlobal(symbolFor("Block"), blockClass);
+	u.SetGlobal(u.SymbolFor("Block"), u.BlockClass)
+	// // Create a fake bootstrap method to simplify later frame traversal
+	// Method bootstrapMethod = newMethod(symbolFor("bootstrap"), 1, 0);
+	bootstrapMethod := NewMethod(u.SymbolFor("bootstrap"), 1, 0)
+	// bootstrapMethod.setBytecode(0, Bytecodes.halt);
+	bootstrapMethod.SetBytecode(0, Halt)
+	// bootstrapMethod.setNumberOfLocals(0);
+	bootstrapMethod.SetNumberOfLocals(0)
+	// bootstrapMethod.setMaximumNumberOfStackElements(2);
+	bootstrapMethod.SetMaximumNumberOfStackElements(2)
+	// bootstrapMethod.setHolder(systemClass);
+	bootstrapMethod.SetHolder(u.SystemClass)
+	// // Start the shell if no filename is given
+	// if (arguments.length == 0)
+	if len(arguments) == 0 {
+		//	  {
+		//		Shell.setBootstrapMethod(bootstrapMethod);
+		u.Shell = &Shell{}
+		u.Shell.SetBootstrapMethod(bootstrapMethod)
+		// Shell.start();
+		u.Shell.Start()
+		// return;
+		return
+		// }
+	}
+	// // Convert the arguments into an array
+	// Array argumentsArray = newArray(arguments);
+	argumentsArray := u.NewArrayFromStrings(arguments)
+	// // Create a fake bootstrap frame with the system object on the stack
+	// Frame bootstrapFrame = Interpreter.pushNewFrame(bootstrapMethod);
+	bootstrapFrame := u.GetInterpreter().PushNewFrame(bootstrapMethod)
+	// bootstrapFrame.push(systemObject);
+	bootstrapFrame.Push(u.SystemObject)
+	// bootstrapFrame.push(argumentsArray);
+	bootstrapFrame.Push(argumentsArray)
 
-//   // Initialize the system classes.
-//   initializeSystemClass(objectClass    , null         , "Object"    );
-//   initializeSystemClass(classClass     , objectClass , "Class"     );
-//   initializeSystemClass(metaclassClass , classClass  , "Metaclass" );
-//   initializeSystemClass(nilClass       , objectClass , "Nil"       );
-//   initializeSystemClass(arrayClass     , objectClass , "Array"     );
-//   initializeSystemClass(methodClass    , arrayClass  , "Method"    );
-//   initializeSystemClass(symbolClass    , objectClass , "Symbol"    );
-//   initializeSystemClass(integerClass   , objectClass , "Integer"   );
-//   initializeSystemClass(bigintegerClass, objectClass , "BigInteger");
-//   initializeSystemClass(frameClass     , arrayClass  , "Frame"     );
-//   initializeSystemClass(primitiveClass , objectClass , "Primitive" );
-//   initializeSystemClass(stringClass    , objectClass , "String"    );
-//   initializeSystemClass(doubleClass    , objectClass , "Double"    );
+	// // Lookup the initialize invokable on the system class
+	// Invokable initialize = systemClass.lookupInvokable(symbolFor("initialize:"));
+	initialize := u.SystemClass.LookupInvokable(u.SymbolFor("initialize:"))
+	// // Invoke the initialize invokable
+	// initialize.invoke(bootstrapFrame);
+	initialize.Invoke(bootstrapFrame)
 
-//   // Load methods and fields into the system classes
-//   loadSystemClass(objectClass);
-//   loadSystemClass(classClass);
-//   loadSystemClass(metaclassClass);
-//   loadSystemClass(nilClass);
-//   loadSystemClass(arrayClass);
-//   loadSystemClass(methodClass);
-//   loadSystemClass(symbolClass);
-//   loadSystemClass(integerClass);
-//   loadSystemClass(bigintegerClass);
-//   loadSystemClass(frameClass);
-//   loadSystemClass(primitiveClass);
-//   loadSystemClass(stringClass);
-//   loadSystemClass(doubleClass);
-
-//   // Load the generic block class
-//   blockClass = loadClass(symbolFor("Block"));
-
-//   // Setup the true and false objects
-//   trueObject = newInstance(loadClass(symbolFor("True")));
-//   falseObject = newInstance(loadClass(symbolFor("False")));
-
-//   // Load the system class and create an instance of it
-//   systemClass = loadClass(symbolFor("System"));
-//   Object systemObject = newInstance(systemClass);
-
-//   // Put special objects and classes into the dictionary of globals
-//   setGlobal(symbolFor("nil"), nilObject);
-//   setGlobal(symbolFor("true"), trueObject);
-//   setGlobal(symbolFor("false"), falseObject);
-//   setGlobal(symbolFor("system"), systemObject);
-//   setGlobal(symbolFor("System"), systemClass);
-//   setGlobal(symbolFor("Block"), blockClass);
-
-//   // Create a fake bootstrap method to simplify later frame traversal
-//   Method bootstrapMethod = newMethod(symbolFor("bootstrap"), 1, 0);
-//   bootstrapMethod.setBytecode(0, Bytecodes.halt);
-//   bootstrapMethod.setNumberOfLocals(0);
-//   bootstrapMethod.setMaximumNumberOfStackElements(2);
-//   bootstrapMethod.setHolder(systemClass);
-
-//   // Start the shell if no filename is given
-//   if (arguments.length == 0)
-//   {
-// 	Shell.setBootstrapMethod(bootstrapMethod);
-// 	Shell.start();
-// 	return;
-//   }
-
-//   // Convert the arguments into an array
-//   Array argumentsArray = newArray(arguments);
-
-//   // Create a fake bootstrap frame with the system object on the stack
-//   Frame bootstrapFrame = Interpreter.pushNewFrame(bootstrapMethod);
-//   bootstrapFrame.push(systemObject);
-//   bootstrapFrame.push(argumentsArray);
-
-//   // Lookup the initialize invokable on the system class
-//   Invokable initialize = systemClass.lookupInvokable(symbolFor("initialize:"));
-
-//   // Invoke the initialize invokable
-//   initialize.invoke(bootstrapFrame);
-
-//   // Start the interpreter
-//   Interpreter.start();
-// }
+	// // Start the interpreter
+	// Interpreter.start();
+	GetInterpreter().Start()
+	// }
+}
 
 // public static void _assert(boolean value)
 //
@@ -457,7 +494,7 @@ func (u *Universe) Assert(value bool) {
 func (u *Universe) NewArray(length int) *Array {
 	// Allocate a new array and set its class to be the array class
 	result := NewArray(length)
-	result.setClass(u.ArrayClass)
+	result.SetClass(u.ArrayClass)
 
 	// Set the number of indexable fields to the given value (length)
 	result.SetNumberOfIndexableFields(length)
@@ -556,7 +593,7 @@ func (u *Universe) NewBlock(method *Method, context *Frame, arguments int) *Bloc
 func (u *Universe) NewClass(classClass *Class) *Class {
 	// Allocate a new class and set its class to be the given class class
 	result := NewClass(classClass.GetNumberOfInstanceFields())
-	result.setClass(classClass)
+	result.SetClass(classClass)
 
 	// Return the freshly allocated class
 	return result
@@ -585,7 +622,7 @@ func (u *Universe) NewClass(classClass *Class) *Class {
 func (u *Universe) NewFrame(previousFrame *Frame, method *Method) *Frame {
 	// Allocate a new frame and set its class to be the frame class
 	result := NewFrame()
-	result.setClass(u.FrameClass)
+	result.SetClass(u.FrameClass)
 	// Compute the maximum number of stack locations (including arguments, locals and
 	// extra buffer to support doesNotUnderstand) and set the number of
 	// indexable fields accordingly
@@ -620,12 +657,12 @@ func (u *Universe) NewFrame(previousFrame *Frame, method *Method) *Frame {
 func (u *Universe) NewMethod(signature *Symbol, numberOfBytecodes int, numberOfLiterals int) *Method {
 	// Allocate a new method and set its class to be the method class
 	result := NewMethod()
-	result.setClass(u.MethodClass)
+	result.SetClass(u.MethodClass)
 
 	// Set the signature and the number of bytecodes
-	result.setSignature(signature)
-	result.setNumberOfBytecodes(numberOfBytecodes)
-	result.setNumberOfIndexableFields(numberOfLiterals)
+	result.SetSignature(signature)
+	result.SetNumberOfBytecodes(numberOfBytecodes)
+	result.SetNumberOfIndexableFields(numberOfLiterals)
 
 	// Return the freshly allocated method
 	return result
@@ -642,8 +679,8 @@ func (u *Universe) NewMethod(signature *Symbol, numberOfBytecodes int, numberOfL
 //	  }
 func (u *Universe) NewInstance(instanceClass *Class) *Object {
 	// Allocate a new instance and set its class to be the given class
-	result := NewObject(instanceClass.getNumberOfInstanceFields())
-	result.setClass(instanceClass)
+	result := NewObject(instanceClass.GetNumberOfInstanceFields())
+	result.SetClass(instanceClass)
 	// Return the freshly allocated instance
 	return result
 }
@@ -662,35 +699,11 @@ func (u *Universe) NewInstance(instanceClass *Class) *Object {
 // }
 func (u *Universe) NewInteger(value int) *Integer {
 	// Allocate a new integer and set its class to be the integer class
-	result := NewInteger()
-	result.setClass(u.IntegerClass)
+	result := NewInteger(value)
+	result.SetClass(u.IntegerClass)
 
 	// Set the embedded integer of the newly allocated integer
-	result.setEmbeddedInteger(value)
-
-	// Return the freshly allocated integer
-	return result
-}
-
-//   public static BigInteger newBigInteger(java.math.BigInteger value)
-//   {
-//   // Allocate a new integer and set its class to be the integer class
-//   BigInteger result = new BigInteger();
-//   result.setClass(bigintegerClass);
-
-//   // Set the embedded integer of the newly allocated integer
-//   result.setEmbeddedBiginteger(value);
-
-// // Return the freshly allocated integer
-// return result;
-// }
-func (u *Universe) NewBigInteger(value *big.Int) *BigInteger {
-	// Allocate a new integer and set its class to be the integer class
-	result := NewBigInteger()
-	result.setClass(u.BigIntegerClass)
-
-	// Set the embedded integer of the newly allocated integer
-	result.setEmbeddedBiginteger(value)
+	//result.setEmbeddedInteger(value)
 
 	// Return the freshly allocated integer
 	return result
@@ -710,11 +723,8 @@ func (u *Universe) NewBigInteger(value *big.Int) *BigInteger {
 // }
 func (u *Universe) NewBigInteger(value int64) *BigInteger {
 	// Allocate a new integer and set its class to be the integer class
-	result := NewBigInteger()
-	result.setClass(u.BigIntegerClass)
-
-	// Set the embedded integer of the newly allocated integer
-	result.setEmbeddedBiginteger(big.NewInt(value))
+	result := NewBigInteger(value)
+	result.SetClass(u.BigIntegerClass)
 
 	// Return the freshly allocated integer
 	return result
@@ -734,12 +744,8 @@ func (u *Universe) NewBigInteger(value int64) *BigInteger {
 // }
 func (u *Universe) NewDouble(value float64) *Double {
 	// Allocate a new integer and set its class to be the double class
-	result := NewDouble()
-	result.setClass(u.DoubleClass)
-
-	// Set the embedded double of the newly allocated double
-	result.setEmbeddedDouble(value)
-
+	result := NewDouble(value)
+	result.SetClass(u.DoubleClass)
 	// Return the freshly allocated double
 	return result
 }
@@ -758,11 +764,11 @@ func (u *Universe) NewDouble(value float64) *Double {
 // }
 func (u *Universe) NewMetaclassClass() *Class {
 	// Allocate the metaclass classes
-	result := NewClass()
-	result.setClass(NewClass())
+	result := NewClass(0)
+	result.SetClass(NewClass(0))
 
 	// Setup the metaclass hierarchy
-	result.getSOMClass().setClass(result)
+	result.GetSOMClass().SetClass(result)
 
 	// Return the freshly allocated metaclass class
 	return result
@@ -782,12 +788,8 @@ func (u *Universe) NewMetaclassClass() *Class {
 // }
 func (u *Universe) NewString(embeddedString string) *String {
 	// Allocate a new string and set its class to be the string class
-	result := NewString()
-	result.setClass(u.StringClass)
-
-	// Put the embedded string into the new string
-	result.setEmbeddedString(embeddedString)
-
+	result := NewString(embeddedString)
+	result.SetClass(u.StringClass)
 	// Return the freshly allocated string
 	return result
 }
@@ -809,12 +811,8 @@ func (u *Universe) NewString(embeddedString string) *String {
 // }
 func (u *Universe) NewSymbol(str string) *Symbol {
 	// Allocate a new symbol and set its class to be the symbol class
-	result := NewSymbol()
-	result.setClass(u.SymbolClass)
-
-	// Put the string into the symbol
-	result.setString(str)
-
+	result := NewSymbol(str)
+	result.SetClass(u.SymbolClass)
 	// Insert the new symbol into the symbol table
 	u.symboltable.insert(result)
 
@@ -834,10 +832,10 @@ func (u *Universe) NewSymbol(str string) *Symbol {
 //	  return systemClass;
 //	  }
 func (u *Universe) NewSystemClass() *Class {
-	systemClass = NewClass()
+	systemClass := NewClass(0)
 	// Setup the metaclass hierarchy
-	systemClass.setClass(NewClass())
-	systemClass.getSOMClass().setClass(metaclassClass)
+	systemClass.SetClass(NewClass(0))
+	systemClass.GetSOMClass().SetClass(u.MetaclassClass)
 
 	return systemClass
 }
@@ -869,22 +867,22 @@ func (u *Universe) NewSystemClass() *Class {
 //	}
 func (u *Universe) InitializeSystemClass(systemClass *Class, superClass *Class, name string) {
 	if superClass != nil {
-		systemClass.setSuperClass(superClass)
-		systemClass.getSOMClass().setSuperClass(superClass.getSOMClass())
+		systemClass.SetSuperClass(superClass)
+		systemClass.GetSOMClass().SetSuperClass(superClass.GetSOMClass())
 	} else {
-		systemClass.getSOMClass().setSuperClass(classClass)
+		systemClass.GetSOMClass().SetSuperClass(u.ClassClass)
 	}
 	// Initialize the array of instance fields
-	systemClass.setInstanceFields(u.NewArray(0))
-	systemClass.getSOMClass().setInstanceFields(u.NewArray(0))
+	systemClass.SetInstanceFields(u.NewArray(0))
+	systemClass.GetSOMClass().SetInstanceFields(u.NewArray(0))
 	// Initialize the array of instance invokables
-	systemClass.setInstanceInvokables(u.NewArray(0))
-	systemClass.getSOMClass().setInstanceInvokables(u.NewArray(0))
+	systemClass.SetInstanceInvokables(u.NewArray(0))
+	systemClass.GetSOMClass().SetInstanceInvokables(u.NewArray(0))
 	// Initialize the name of the system class
-	systemClass.setName(u.SymbolFor(name))
-	systemClass.getSOMClass().setName(u.SymbolFor(name + " class"))
+	systemClass.SetName(u.SymbolFor(name))
+	systemClass.GetSOMClass().SetName(u.SymbolFor(name + " class"))
 	// Insert the system class into the dictionary of globals
-	u.setGlobal(systemClass.getName(), systemClass)
+	u.SetGlobal(systemClass.GetName(), systemClass)
 }
 
 // public static Object getGlobal(Symbol name)
@@ -895,10 +893,10 @@ func (u *Universe) InitializeSystemClass(systemClass *Class, superClass *Class, 
 //	  // Global not found
 //	  return null;
 //	}
-func (u *Universe) GetGlobal(name *Symbol) *Object {
+func (u *Universe) GetGlobal(name *Symbol) interface{} {
 	// Return the global with the given name if it's in the dictionary of globals
-	if u.hasGlobal(name) {
-		return u.globals[name]
+	if u.HasGlobal(name) {
+		return u.Globals[name]
 	}
 
 	// Global not found
@@ -911,9 +909,9 @@ func (u *Universe) GetGlobal(name *Symbol) *Object {
 //	  // Insert the given value into the dictionary of globals
 //	  globals.put(name, value);
 //	}
-func (u *Universe) SetGlobal(name *Symbol, value *Object) {
+func (u *Universe) SetGlobal(name *Symbol, value interface{}) {
 	// Insert the given value into the dictionary of globals
-	u.globals[name] = value
+	u.Globals[name] = value
 }
 
 // public static boolean hasGlobal(Symbol name)
@@ -924,7 +922,7 @@ func (u *Universe) SetGlobal(name *Symbol, value *Object) {
 //	}
 func (u *Universe) HasGlobal(name *Symbol) bool {
 	// Returns if the universe has a value for the global of the given name
-	return u.globals[name] != nil
+	return u.Globals[name] != nil
 }
 
 // public static Class getBlockClass()
@@ -935,7 +933,7 @@ func (u *Universe) HasGlobal(name *Symbol) bool {
 //	}
 func (u *Universe) GetBlockClass() *Class {
 	// Get the generic block class
-	return blockClass
+	return u.BlockClass
 }
 
 // public static Class getBlockClass(int numberOfArguments)
@@ -959,12 +957,12 @@ func (u *Universe) NewBlockClass(numberOfArguments int) *Class {
 	name := u.SymbolFor("Block" + strconv.Itoa(numberOfArguments))
 	// Lookup the specific block class in the dictionary of globals and return it
 	if u.HasGlobal(name) {
-		return u.GetGlobal(name)
+		return u.GetGlobal(name).(*Class)
 	}
 	// Get the block class for blocks with the given number of arguments
-	result := u.LoadClass(name, nil)
+	result := LoadClass(name, nil)
 	// Add the appropriate value primitive to the block class
-	result.addInstancePrimitive(Block.getEvaluationPrimitive(numberOfArguments))
+	result.AddInstancePrimitive(&GetEvaluationPrimitive(numberOfArguments).Primitive)
 	// Insert the block class into the dictionary of globals
 	u.SetGlobal(name, result)
 	// Return the loaded block class
@@ -982,16 +980,16 @@ func (u *Universe) NewBlockClass(numberOfArguments int) *Class {
 //	  if(result != null && result.hasPrimitives()) result.loadPrimitives();
 //	  return result;
 //	}
-func loadClass(name *Symbol) *Class {
+func (u *Universe) LoadClass(name *Symbol) *Class {
 	// Check if the requested class is already in the dictionary of globals
 	if u.HasGlobal(name) {
-		return u.GetGlobal(name)
+		return u.GetGlobal(name).(*Class)
 	}
 	// Load the class
-	result := u.LoadClass(name, nil)
+	result := LoadClass(name, nil)
 	// Load primitives (if necessary) and return the resulting class
-	if result != nil && result.hasPrimitives() {
-		result.loadPrimitives()
+	if result != nil && result.HasPrimitives() {
+		result.LoadPrimitives()
 	}
 	return result
 }
@@ -1009,13 +1007,13 @@ func loadClass(name *Symbol) *Class {
 //	  if(result.hasPrimitives()) result.loadPrimitives();
 //	}
 func loadSystemClass(systemClass *Class) {
-	result := loadClass(systemClass.getName(), systemClass)
+	result := LoadClass(systemClass.GetName(), systemClass)
 	if result == nil {
-		fmt.Println(systemClass.getName().getString())
+		fmt.Println(systemClass.GetName().String())
 		fmt.Println("Failed: loadClass(systemClass.getName(), systemClass)")
 	}
-	if result.hasPrimitives() {
-		result.loadPrimitives()
+	if result.HasPrimitives() {
+		result.LoadPrimitives()
 	}
 }
 
@@ -1043,19 +1041,20 @@ func loadSystemClass(systemClass *Class) {
 //	  System.out.println(" The class could not be found");
 //	  return null;
 //	}
-func loadClass(name *Symbol, systemClass *Class) *Class {
+func LoadClass(name *Symbol, systemClass *Class) *Class {
+	u := GetUniverse()
 	// Try loading the class from all different paths
-	for _, cpEntry := range classPath {
+	for _, cpEntry := range u.classPath {
 		// Load the class from a file and return the loaded class
-		result := som.compiler.SourcecodeCompiler.compileClass(cpEntry+fileSeparator, name.getString(), systemClass)
-		if dumpBytecodes {
+		result := SourcecodeCompiler.compileClass(cpEntry+u.FileSep, name.String(), systemClass)
+		if u.dumpBytecodes {
 			Disassembler.dump(result.getSOMClass())
 			Disassembler.dump(result)
 		}
 		return result
 	}
 	// The class could not be found.
-	fmt.Println(name.getString())
+	fmt.Println(name.String())
 	fmt.Println(" The class could not be found")
 	return nil
 }
@@ -1070,40 +1069,12 @@ func loadClass(name *Symbol, systemClass *Class) *Class {
 //			Disassembler.dump(result);
 //		return result;
 //	}
-func loadShellClass(stmt string) *Class {
+func LoadShellClass(stmt string) *Class {
+	u := GetUniverse()
 	// Load the class from a stream and return the loaded class
-	result := som.compiler.SourcecodeCompiler.compileClass(stmt, nil)
-	if dumpBytecodes {
+	result := SourcecodeCompiler.compileClass(stmt, nil)
+	if u.dumpBytecodes {
 		Disassembler.dump(result)
 	}
 	return result
 }
-
-// public static Object nilObject;
-// public static Object trueObject;
-// public static Object falseObject;
-
-// public static Class objectClass;
-// public static Class classClass;
-// public static Class metaclassClass;
-
-// public static Class nilClass;
-// public static Class integerClass;
-// public static Class bigintegerClass;
-// public static Class arrayClass;
-// public static Class methodClass;
-// public static Class symbolClass;
-// public static Class frameClass;
-// public static Class primitiveClass;
-// public static Class stringClass;
-// public static Class systemClass;
-// public static Class blockClass;
-// public static Class doubleClass;
-
-// private static java.util.HashMap<Symbol,som.vmobjects.Object> globals = new java.util.HashMap<Symbol,som.vmobjects.Object>();
-// private static java.lang.String[] classPath;
-// private static boolean dumpBytecodes;
-
-// public static java.lang.String pathSeparator;
-// public static java.lang.String fileSeparator;
-// }

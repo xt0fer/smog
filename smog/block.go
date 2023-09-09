@@ -10,7 +10,7 @@ type Block struct {
 func NewBlock(nf int) *Block {
 	np := &Block{}
 	np.numberOfBlockFields = nf
-	np.setClass(GetUniverse().BlockClass)
+	np.SetClass(GetUniverse().BlockClass)
 	return np
 }
 
@@ -69,12 +69,12 @@ func (b *Block) getDefaultNumberOfFields() int {
 //	{
 //	  return new Evaluation(numberOfArguments);
 //	}
-func GetEvaluationPrimitive(numberOfArguments int) *Primitive {
-	return NewPrimitive(computeSignatureString(numberOfArguments))
+func GetEvaluationPrimitive(numberOfArguments int) *Evaluation {
+	return NewEvaluation(numberOfArguments)
 }
 
 type Evaluation struct {
-	*Primitive
+	Primitive
 	numberOfArguments int
 }
 
@@ -87,8 +87,9 @@ type Evaluation struct {
 //		this.numberOfArguments = numberOfArguments;
 //	  }
 func NewEvaluation(numberOfArguments int) *Evaluation {
-	ne := &Evaluation{}
-	ne.PrimitiveInit(computeSignatureString(numberOfArguments))
+	np := NewPrimitive(computeSignatureString(numberOfArguments))
+	ne := &Evaluation{Primitive: *np}
+
 	ne.numberOfArguments = numberOfArguments
 	return ne
 }

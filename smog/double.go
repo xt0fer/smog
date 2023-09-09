@@ -3,6 +3,7 @@ package smog
 import "fmt"
 
 type Double struct {
+	Object
 	embeddedDouble float64
 }
 

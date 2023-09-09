@@ -119,7 +119,7 @@ func (c *Class) GetInstanceInvokable(index int) Invokable {
 	}
 }
 
-func (c *Class) setInstanceInvokable(index int, value Invokable) {
+func (c *Class) SetInstanceInvokable(index int, value Invokable) {
 	// Set this class as the holder of the given invokable
 	value.SetHolder(c)
 
@@ -127,12 +127,12 @@ func (c *Class) setInstanceInvokable(index int, value Invokable) {
 	c.GetInstanceInvokables().SetIndexableField(index, value)
 }
 
-func (c *Class) getDefaultNumberOfFields() int {
+func (c *Class) GetDefaultNumberOfFields() int {
 	// Return the default number of fields in a class
 	return c.ClassFields.GetNumberOfIndexableFields()
 }
 
-func (c *Class) lookupInvokable(signature *Symbol) Invokable {
+func (c *Class) LookupInvokable(signature *Symbol) Invokable {
 	// Lookup invokable with given signature in array of instance invokables
 	for i := 0; i < c.GetNumberOfInstanceInvokables(); i++ {
 		// Get the next invokable in the instance invokable array
@@ -147,7 +147,7 @@ func (c *Class) lookupInvokable(signature *Symbol) Invokable {
 	// Traverse the super class chain by calling lookup on the super class
 	if c.HasSuperClass() {
 		superc := c.GetSuperClass()
-		invokable := superc.lookupInvokable(signature)
+		invokable := superc.LookupInvokable(signature)
 		if invokable != nil {
 			return invokable
 		}
@@ -157,11 +157,11 @@ func (c *Class) lookupInvokable(signature *Symbol) Invokable {
 	return nil
 }
 
-func (c *Class) lookupFieldIndex(fieldName *Symbol) int {
+func (c *Class) LookupFieldIndex(fieldName *Symbol) int {
 	// Lookup field with given name in array of instance fields
-	for i := c.getNumberOfInstanceFields() - 1; i >= 0; i-- {
+	for i := c.GetNumberOfInstanceFields() - 1; i >= 0; i-- {
 		// Return the current index if the name matches
-		if fieldName == c.getInstanceFieldName(i) {
+		if fieldName == c.GetInstanceFieldName(i) {
 			return i
 		}
 	}
@@ -170,7 +170,7 @@ func (c *Class) lookupFieldIndex(fieldName *Symbol) int {
 	return -1
 }
 
-func (c *Class) addInstanceInvokable(value Invokable) bool {
+func (c *Class) AddInstanceInvokable(value Invokable) bool {
 	// Add the given invokable to the array of instance invokables
 	for i := 0; i < c.GetNumberOfInstanceInvokables(); i++ {
 		// Get the next invokable in the instance invokable array
@@ -178,7 +178,7 @@ func (c *Class) addInstanceInvokable(value Invokable) bool {
 
 		// Replace the invokable with the given one if the signature matches
 		if invokable.GetSignature() == value.GetSignature() {
-			c.setInstanceInvokable(i, value)
+			c.SetInstanceInvokable(i, value)
 			return false
 		}
 	}
@@ -188,24 +188,24 @@ func (c *Class) addInstanceInvokable(value Invokable) bool {
 	return true
 }
 
-func (c *Class) addInstancePrimitive(value *Primitive) {
-	if c.addInstanceInvokable(value) {
+func (c *Class) AddInstancePrimitive(value *Primitive) {
+	if c.AddInstanceInvokable(value) {
 		fmt.Println("Warning: Primitive " + value.GetSignature().String())
 		fmt.Println(" is not in class definition for class " + c.GetName().String())
 	}
 }
 
-func (c *Class) getInstanceFieldName(index int) *Symbol {
+func (c *Class) GetInstanceFieldName(index int) *Symbol {
 	// Get the name of the instance field with the given index
 	if index >= c.GetNumberOfSuperInstanceFields() {
 		// Adjust the index to account for fields defined in the super class
-		index -= c.getNumberOfSuperInstanceFields()
+		index -= c.GetNumberOfSuperInstanceFields()
 
 		// Return the symbol representing the instance fields name
-		return c.GetInstanceFields().GetIndexableField(index)
+		return c.InstanceFields.GetIndexableField(index).(*Symbol)
 	} else {
 		// Ask the super class to return the name of the instance field
-		return c.GetSuperClass().getInstanceFieldName(index)
+		return c.GetSuperClass().GetInstanceFieldName(index)
 	}
 }
 
@@ -225,19 +225,19 @@ func (c *Class) GetNumberOfSuperInstanceFields() int {
 }
 
 // Set from an array of strings
-// func (c *Class) SetInstanceFields(fields []string) {
-// 	// Allocate an array of the right size
-// 	instanceFields := GetUniverse().NewArray(len(c.Fields))
+func (c *Class) SetInstanceFieldsFromStrings(fields []string) {
+	// Allocate an array of the right size
+	instanceFields := GetUniverse().NewArray(len(c.Fields))
 
-// 	// Iterate through all the given fields
-// 	for i := 0; i < len(c.Fields); i++ {
-// 		// Insert the symbol corresponding to the given field string in the array
-// 		instanceFields.SetIndexableField(i, GetUniverse().SymbolFor(fields[i]))
-// 	}
+	// Iterate through all the given fields
+	for i := 0; i < len(c.Fields); i++ {
+		// Insert the symbol corresponding to the given field string in the array
+		instanceFields.SetIndexableField(i, GetUniverse().SymbolFor(fields[i]))
+	}
 
-// 	// Set the instance fields of this class to the new array
-// 	c.SetInstanceFields(instanceFields)
-// }
+	// Set the instance fields of this class to the new array
+	c.SetInstanceFields(instanceFields)
+}
 
 func (c *Class) HasPrimitives() bool {
 	// Lookup invokable with given signature in array of instance invokables
@@ -274,8 +274,10 @@ func (c *Class) ReplaceBytecodes() {
 	for index := 0; index < cnt; index++ { // no pre-increment in Go
 		inv := c.GetInstanceInvokable(index)
 		if !inv.IsPrimitive() {
-			met := inv
-			met.ReplaceBytecodes()
+			if v, ok := inv.(*Method); ok {
+				met := *v
+				met.ReplaceBytecodes()
+			}
 		}
 	}
 }

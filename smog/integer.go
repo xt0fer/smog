@@ -3,6 +3,7 @@ package smog
 import "fmt"
 
 type Integer struct {
+	Object
 	embeddedInt int
 }
 

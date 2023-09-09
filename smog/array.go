@@ -20,7 +20,7 @@ type Array struct {
 
 func NewArray(n int) *Array {
 	a := &Array{}
-	a.Object.ObjectInit("", 2)
+	a.Object.ObjectInit(2)
 	a.ArrayInit(n)
 	return a
 }

@@ -3,6 +3,7 @@ package smog
 import "fmt"
 
 type String struct {
+	Object
 	Str string
 }
 

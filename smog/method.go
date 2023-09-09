@@ -1,6 +1,6 @@
 package smog
 
-import "fmt"
+import "log"
 
 type IsMethod interface {
 }
@@ -21,7 +21,7 @@ type Method struct {
 
 func NewMethod() *Method {
 	a := &Method{}
-	a.Object.ObjectInit("", 2)
+	a.Object.ObjectInit(2)
 	a.ArrayInit(0)
 	a.MethodInit(0)
 	return a
@@ -275,17 +275,17 @@ func (m *Method) Invoke(frame *Frame) {
 
 // }
 func (m *Method) ReplaceBytecodes() {
-	fmt.Println("Not sure of ReplaceBytes")
+	log.Println("Not sure of ReplaceBytes")
 	newbc := make([]byte, len(m.bytecode))
 	idx := 0
 
-	for i := 0; i < len(m.bytecode); {
+	for i := 0; i < len(m.bytecode); i++ {
 		bc1 := m.bytecode[i]
-		len1 := len(m.bytecode)
+		byteCodeLen := bytecodeLength[int(m.bytecode[0])]
 
-		if i+len1 >= len(m.bytecode) {
+		if i+byteCodeLen >= byteCodeLen {
 			// we're over target, so just copy bc1
-			for j := i; j < i+len1; j++ {
+			for j := i; j < i+byteCodeLen; j++ {
 				newbc[idx] = m.bytecode[j]
 				idx++
 			}
@@ -296,12 +296,12 @@ func (m *Method) ReplaceBytecodes() {
 		idx++
 
 		// copy args to bc1
-		for j := i + 1; j < i+len1; j++ {
+		for j := i + 1; j < i+byteCodeLen; j++ {
 			newbc[idx] = m.bytecode[j]
 			idx++
 		}
 
-		i += len1 // update i to point on bc2
+		i += byteCodeLen // update i to point on bc2
 	}
 	// we copy the new array because it may be shorter, and we don't
 	// want to upset whatever dependence there is on the length
@@ -350,4 +350,8 @@ func (m *Method) AddReceiverClassAndMethod(recClass *Class, invokable Invokable)
 //	}
 func (m *Method) IsReceiverClassTableFull() bool {
 	return m.receiverClassIndex == 255
+}
+
+func (m *Method) IsPrimitive() bool {
+	return false
 }

@@ -1,5 +1,7 @@
 package smog
 
+import "log"
+
 // Bytecodes
 
 const (
@@ -219,7 +221,7 @@ func (itp *Interpreter) DoReturnNonLocal() {
 	itp.PopFrameAndPushResult(result)
 }
 
-func (itp *Interpreter) doSend(bytecodeIndex int) {
+func (itp *Interpreter) DoSend(bytecodeIndex int) {
 	// Handle the send bytecode
 	signature := itp.GetMethod().GetConstant(bytecodeIndex)
 
@@ -227,13 +229,13 @@ func (itp *Interpreter) doSend(bytecodeIndex int) {
 	numberOfArguments := signature.GetNumberOfSignatureArguments()
 
 	// Get the receiver from the stack
-	receiver := itp.Frame.GetStackElement(numberOfArguments - 1)
+	receiver := itp.Frame.GetStackElement(numberOfArguments - 1).(*Object)
 
 	// Send the message
 	itp.Send(signature, receiver.GetSOMClass(), bytecodeIndex)
 }
 
-func (itp *Interpreter) start() {
+func (itp *Interpreter) Start() {
 	// Iterate through the bytecodes
 	for {
 
@@ -275,7 +277,7 @@ func (itp *Interpreter) start() {
 
 		case push_argument:
 			{
-				itp.SoPushArgument(bytecodeIndex)
+				itp.DoPushArgument(bytecodeIndex)
 				break
 			}
 
@@ -352,15 +354,15 @@ func (itp *Interpreter) start() {
 			}
 
 		default:
-			fmt.println("Nasty bug in interpreter")
+			log.Println("Nasty bug in interpreter")
 			break
 		}
 	}
 }
 
-func (itp *Interpreter) pushNewFrame(method Method) *Frame {
+func (itp *Interpreter) PushNewFrame(method *Method) *Frame {
 	// Allocate a new frame and make it the current one
-	Frame := Universe.newFrame(itp.Frame, method)
+	Frame := GetUniverse().NewFrame(itp.Frame, method)
 
 	// Return the freshly allocated and pushed frame
 	return Frame
@@ -378,23 +380,23 @@ func (itp *Interpreter) GetMethod() *Method {
 
 func (itp *Interpreter) GetSelf() *Object {
 	// Get the self object from the interpreter
-	return itp.Frame.GetOuterContext().GetArgument(0, 0)
+	return itp.Frame.GetOuterContext().GetArgument(0, 0).(*Object)
 }
 
-func (itp *Interpreter) send(signature Symbol, receiverClass Class, bytecodeIndex int) {
+func (itp *Interpreter) Send(signature *Symbol, receiverClass *Class, bytecodeIndex int) {
 	// Lookup the invokable with the given signature
-	invokable := receiverClass.lookupInvokable(signature)
+	invokable := receiverClass.LookupInvokable(signature)
 
 	if invokable != nil {
 		// Invoke the invokable in the current frame
-		invokable.invoke(itp.Frame)
+		invokable.Invoke(itp.Frame)
 
 	} else {
 		// Compute the number of arguments
 		numberOfArguments := signature.GetNumberOfSignatureArguments()
 
 		// Compute the receiver
-		receiver := itp.Frame.GetStackElement(numberOfArguments - 1)
+		receiver := itp.Frame.GetStackElement(numberOfArguments - 1).(*Object)
 
 		// Allocate an array with enough room to hold all arguments
 		argumentsArray := GetUniverse().NewArray(numberOfArguments)
@@ -405,8 +407,10 @@ func (itp *Interpreter) send(signature Symbol, receiverClass Class, bytecodeInde
 		}
 
 		// Send 'doesNotUnderstand:arguments:' to the receiver object
-		arguments := []Object{signature, argumentsArray}
-		receiver.send("doesNotUnderstand:arguments:", arguments)
+		log.Println("Send 'doesNotUnderstand:arguments:' to the receiver object, NEED TO ADD argumentsArray")
+		arguments := []string{signature.String()}
+
+		receiver.Send("doesNotUnderstand:arguments:", arguments)
 	}
 }
 

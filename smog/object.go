@@ -1,16 +1,16 @@
 package smog
 
 type IsObject interface {
-	getSOMClass() *Class
-	setClass(c *Class)
-	getFieldName(index int) *Symbol
-	getField(index int) *Object
-	setField(index int, value *Object)
-	getFieldIndex(name *Symbol)
-	getNumberOfFields() int
-	setNumberOfFields(value int)
-	getDefaultNumberOfFields() int
-	send(selectorStr string, arguments []*Object)
+	GetSOMClass() *Class
+	SetClass(c *Class)
+	GetFieldName(index int) *Symbol
+	GetField(index int) *Object
+	SetField(index int, value *Object)
+	GetFieldIndex(name *Symbol)
+	GetNumberOfFields() int
+	SetNumberOfFields(value int)
+	GetDefaultNumberOfFields() int
+	Send(selectorStr string, arguments []*Object)
 }
 
 type Object struct {
@@ -19,37 +19,37 @@ type Object struct {
 	Fields               []interface{}
 }
 
-func NewObject(name string, fields int) *Object {
+func NewObject(fields int) *Object {
 	ns := &Object{}
-	ns.ObjectInit(name, fields)
+	ns.ObjectInit(fields)
 	return ns
 }
 
-func (ns *Object) ObjectInit(name string, fields int) {
+func (ns *Object) ObjectInit(fields int) {
 	if fields == -1 {
-		ns.NumberOfObjectFields = ns.getDefaultNumberOfFields()
+		ns.NumberOfObjectFields = ns.GetDefaultNumberOfFields()
 	} else {
 		ns.NumberOfObjectFields = fields
 	}
 	ns.Fields = make([]interface{}, ns.NumberOfObjectFields)
 }
 
-func (o *Object) getSOMClass() *Class {
+func (o *Object) GetSOMClass() *Class {
 	return o.SOMClass
 }
 
-func (o *Object) setClass(c *Class) {
+func (o *Object) SetClass(c *Class) {
 	o.SOMClass = c
 }
 
 func (o *Object) GetFieldName(index int) *Symbol {
 	// Get the name of the field with the given index
-	return o.getSOMClass().getInstanceFieldName(index)
+	return o.GetSOMClass().GetInstanceFieldName(index)
 }
 
 func (o *Object) GetFieldIndex(name *Symbol) int {
 	// Get the index for the field with the given name
-	return o.getSOMClass().lookupFieldIndex(name)
+	return o.GetSOMClass().LookupFieldIndex(name)
 }
 
 func (o *Object) GetNumberOfFields() int {
@@ -77,18 +77,18 @@ func (o *Object) Send(selectorStr string, arguments []*Object) {
 	selector := GetUniverse().SymbolFor(selectorStr)
 
 	// Push the receiver onto the stack
-	interpreter := GetUniverse().GetInterpreter()
-	interpreter.getFrame().push(o)
+	interpreter := GetInterpreter()
+	interpreter.GetFrame().Push(o)
 
 	// Push the arguments onto the stack
 	for arg := range arguments {
-		interpreter.getFrame().push(arg)
+		interpreter.GetFrame().Push(arg)
 	}
 	// Lookup the invokable
-	invokable := o.getSOMClass().lookupInvokable(selector)
+	invokable := o.GetSOMClass().LookupInvokable(selector)
 
 	// Invoke the invokable
-	invokable.Invoke(interpreter.getFrame())
+	invokable.Invoke(interpreter.GetFrame())
 }
 
 func (o *Object) getField(index int) interface{} {

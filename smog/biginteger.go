@@ -2,22 +2,22 @@ package smog
 
 import (
 	"fmt"
-	"math/big"
 )
 
 type BigInteger struct {
-	embeddedBigInt big.Int
+	Object
+	embeddedBigInt int64
 }
 
-func NewBigInteger(i big.Int) *BigInteger {
+func NewBigInteger(i int64) *BigInteger {
 	return &BigInteger{embeddedBigInt: i}
 }
 
-func (i *BigInteger) getEmbeddedInteger() big.Int {
+func (i *BigInteger) getEmbeddedInteger() int64 {
 	return i.embeddedBigInt
 }
 
-func (i *BigInteger) setEmbeddedInteger(value big.Int) {
+func (i *BigInteger) setEmbeddedInteger(value int64) {
 	i.embeddedBigInt = value
 }
 

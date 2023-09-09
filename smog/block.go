@@ -7,6 +7,13 @@ type Block struct {
 	numberOfBlockFields int
 }
 
+func NewBlock(nf int) *Block {
+	np := &Block{}
+	np.numberOfBlockFields = nf
+	np.setClass(GetUniverse().BlockClass)
+	return np
+}
+
 // public Method getMethod()
 //
 //	{
@@ -103,8 +110,8 @@ func (e *Evaluation) Invoke(frame *Frame) {
 	// Get the context of the block...
 	context := self.GetContext()
 	// Push a new frame and set its context to be the one specified in the block
-	newFrame := Interpreter.PushNewFrame(self.GetMethod())
-	newFrame.copyArgumentsFrom(frame)
+	newFrame := GetInterpreter().PushNewFrame(self.GetMethod())
+	newFrame.CopyArgumentsFrom(frame)
 	newFrame.SetContext(context)
 }
 

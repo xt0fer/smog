@@ -445,9 +445,9 @@ func (itp *Interpreter) PopFrameAndPushResult(result Object) {
 //	  // Return the freshly allocated and pushed frame
 //	  return frame;
 //	}
-func (itp *Interpreter) PushNewFrame(method Method) *Frame {
+func (itp *Interpreter) PushNewFrame(method *Method) *Frame {
 	// Allocate a new frame and make it the current one
-	Frame := Universe.NewFrame(itp.Frame, method)
+	Frame := GetUniverse().NewFrame(itp.Frame, method)
 
 	// Return the freshly allocated and pushed frame
 	return Frame

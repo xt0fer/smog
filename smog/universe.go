@@ -10,7 +10,7 @@ import (
 )
 
 type Universe struct {
-	Globals       map[*Symbol]*Object
+	Globals       map[*Symbol]interface{}
 	symboltable   *SymbolTable
 	dumpBytecodes bool
 	//
@@ -533,12 +533,12 @@ func (u *Universe) NewArrayFromStrings(stringArray []string) *Array {
 // }
 func (u *Universe) NewBlock(method *Method, context *Frame, arguments int) *Block {
 	// Allocate a new block and set its class to be the block class
-	result := 
-	result.setClass(u.getBlockClass(arguments))
+	result := NewBlock(arguments)
+	//result.setClass(u.GetBlockClass())
 
 	// Set the method and context of block
-	result.setMethod(method)
-	result.setContext(context)
+	result.SetMethod(method)
+	result.SetContext(context)
 
 	// Return the freshly allocated block
 	return result
@@ -555,7 +555,7 @@ func (u *Universe) NewBlock(method *Method, context *Frame, arguments int) *Bloc
 // }
 func (u *Universe) NewClass(classClass *Class) *Class {
 	// Allocate a new class and set its class to be the given class class
-	result := NewClass(classClass.getNumberOfInstanceFields())
+	result := NewClass(classClass.GetNumberOfInstanceFields())
 	result.setClass(classClass)
 
 	// Return the freshly allocated class
@@ -589,16 +589,16 @@ func (u *Universe) NewFrame(previousFrame *Frame, method *Method) *Frame {
 	// Compute the maximum number of stack locations (including arguments, locals and
 	// extra buffer to support doesNotUnderstand) and set the number of
 	// indexable fields accordingly
-	length := method.getNumberOfArguments() + method.getNumberOfLocals() + method.getMaximumNumberOfStackElements() + 2
-	result.setNumberOfIndexableFields(length)
+	length := method.GetNumberOfArguments() + method.GetNumberOfLocals() + method.getMaximumNumberOfStackElements() + 2
+	result.SetNumberOfIndexableFields(length)
 	// Set the method of the frame and the previous frame
-	result.setMethod(method)
+	result.SetMethod(method)
 	if previousFrame != nil {
-		result.setPreviousFrame(previousFrame)
+		result.SetPreviousFrame(previousFrame)
 	}
 	// Reset the stack pointer and the bytecode index
-	result.resetStackPointer()
-	result.setBytecodeIndex(0)
+	result.ResetStackPointer()
+	result.SetBytecodeIndex(0)
 	// Return the freshly allocated frame
 	return result
 }
@@ -954,7 +954,7 @@ func (u *Universe) GetBlockClass() *Class {
 //	  // Return the loaded block class
 //	  return result;
 //	}
-func (u *Universe) GetBlockClass(numberOfArguments int) *Class {
+func (u *Universe) NewBlockClass(numberOfArguments int) *Class {
 	// Compute the name of the block class with the given number of arguments
 	name := u.SymbolFor("Block" + strconv.Itoa(numberOfArguments))
 	// Lookup the specific block class in the dictionary of globals and return it

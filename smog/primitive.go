@@ -12,11 +12,12 @@ func (p *Primitive) isPrimitive() bool {
 	return true
 }
 
-func NewPrimitive(signatureString string) {
+func NewPrimitive(signatureString string) *Primitive {
 	np := &Primitive{}
 	np.signature = GetUniverse().SymbolFor(signatureString)
 
 	np.setClass(GetUniverse().PrimitiveClass)
+	return np
 }
 
 func (p *Primitive) GetSignature() *Symbol {

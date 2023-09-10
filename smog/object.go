@@ -1,5 +1,7 @@
 package smog
 
+import "log"
+
 type IsObject interface {
 	GetSOMClass() *Class
 	SetClass(c *Class)
@@ -63,7 +65,7 @@ func (o *Object) SetNumberOfFields(value int) {
 
 	// Clear each and every field by putting nil into them
 	for i := 0; i < o.GetNumberOfFields(); i++ {
-		o.setField(i, GetUniverse().NilObject)
+		o.SetField(i, GetUniverse().NilObject)
 	}
 }
 
@@ -76,6 +78,9 @@ func (o *Object) Send(selectorStr string, arguments []*Object) {
 	// Turn the selector string into a selector
 	selector := GetUniverse().SymbolFor(selectorStr)
 
+	if arguments == nil {
+		log.Println("in Object.Send(), argument list is NIL\nProbably a bug in the interpreter.")
+	}
 	// Push the receiver onto the stack
 	interpreter := GetInterpreter()
 	interpreter.GetFrame().Push(o)
@@ -91,16 +96,16 @@ func (o *Object) Send(selectorStr string, arguments []*Object) {
 	invokable.Invoke(interpreter.GetFrame())
 }
 
-func (o *Object) getField(index int) interface{} {
+func (o *Object) GetField(index int) interface{} {
 	// Get the field with the given index
 	return o.Fields[index]
 }
 
-func (o *Object) setField(index int, value interface{}) {
+func (o *Object) SetField(index int, value interface{}) {
 	// Set the field with the given index to the given value
 	o.Fields[index] = value
 }
 
-// func (o IsObject) _assert(boolean value) {
+// func (o *Object) _assert(value bool) {
 // 	GetUniverse()._assert(value)
 // }

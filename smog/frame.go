@@ -51,18 +51,18 @@ func NewFrame() *Frame {
  */
 
 func (f *Frame) GetPreviousFrame() *Frame {
-	return f.getField(f.PreviousFrameIndex).(*Frame)
+	return f.GetField(f.PreviousFrameIndex).(*Frame)
 }
 func (f *Frame) SetPreviousFrame(value *Frame) {
-	f.setField(f.PreviousFrameIndex, value)
+	f.SetField(f.PreviousFrameIndex, value)
 }
 
 func (f *Frame) ClearPreviousFrame() {
-	f.setField(f.PreviousFrameIndex, GetUniverse().NilObject)
+	f.SetField(f.PreviousFrameIndex, GetUniverse().NilObject)
 }
 
 func (f *Frame) HasPreviousFrame() bool {
-	return f.getField(f.PreviousFrameIndex) != GetUniverse().NilObject
+	return f.GetField(f.PreviousFrameIndex) != GetUniverse().NilObject
 }
 
 func (f *Frame) IsBootstrapFrame() bool {
@@ -75,7 +75,7 @@ func (f *Frame) IsBootstrapFrame() bool {
 //		 return (Frame) getField(contextIndex);
 //	   }
 func (f *Frame) GetContext() *Frame {
-	return f.getField(f.ContextIndex).(*Frame)
+	return f.GetField(f.ContextIndex).(*Frame)
 }
 
 //	   public void setContext(Frame value)
@@ -84,7 +84,7 @@ func (f *Frame) GetContext() *Frame {
 //		 setField(contextIndex, value);
 //	   }
 func (f *Frame) SetContext(value *Frame) {
-	f.setField(f.ContextIndex, value)
+	f.SetField(f.ContextIndex, value)
 }
 
 //	   public boolean hasContext()
@@ -92,7 +92,7 @@ func (f *Frame) SetContext(value *Frame) {
 //		 return getField(contextIndex) != Universe.nilObject;
 //	   }
 func (f *Frame) HasContext() bool {
-	return f.getField(f.ContextIndex) != GetUniverse().NilObject
+	return f.GetField(f.ContextIndex) != GetUniverse().NilObject
 }
 
 //	   public Frame getContext(int level)
@@ -141,7 +141,7 @@ func (f *Frame) GetOuterContext() *Frame {
 //		 return (Method) getField(methodIndex);
 //	   }
 func (f *Frame) GetMethod() *Method {
-	return f.getField(f.MethodIndex).(*Method)
+	return f.GetField(f.MethodIndex).(*Method)
 }
 
 //	   public void setMethod(Method value)
@@ -150,7 +150,7 @@ func (f *Frame) GetMethod() *Method {
 //		 setField(methodIndex, value);
 //	   }
 func (f *Frame) SetMethod(value *Method) {
-	f.setField(f.MethodIndex, value)
+	f.SetField(f.MethodIndex, value)
 }
 
 //	   public int getDefaultNumberOfFields()
@@ -158,7 +158,7 @@ func (f *Frame) SetMethod(value *Method) {
 //		 // Return the default number of fields in a frame
 //		 return numberOfFrameFields;
 //	   }
-func (f *Frame) getDefaultNumberOfFields() int {
+func (f *Frame) GetDefaultNumberOfFields() int {
 	return f.NumberOfFrameFields
 }
 

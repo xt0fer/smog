@@ -38,6 +38,8 @@ type Universe struct {
 	BlockClass      *Class
 	DoubleClass     *Class
 	Shell           *Shell
+	SystemClass     *Class
+	SystemObject    *Object
 }
 
 var instantiated *Universe
@@ -314,29 +316,29 @@ func (u *Universe) initialize(arguments []string) {
 	// // Initialize the system classes.
 	// // Note: The order in which the system classes are initialized is important
 	// //       since their names are used to bootstrap the system.
-	// initializeSystemClass(objectClass    , null         , "Object"    );
-	// initializeSystemClass(classClass     , objectClass , "Class"     );
-	// initializeSystemClass(metaclassClass , classClass  , "Metaclass" );
-	// initializeSystemClass(nilClass       , objectClass , "Nil"       );
-	// initializeSystemClass(arrayClass     , objectClass , "Array"     );
-	u.initializeSystemClass(u.ObjectClass, nil, "Object")
-	u.initializeSystemClass(u.ClassClass, u.ObjectClass, "Class")
+	// InitializeSystemClass(objectClass    , null         , "Object"    );
+	// InitializeSystemClass(classClass     , objectClass , "Class"     );
+	// InitializeSystemClass(metaclassClass , classClass  , "Metaclass" );
+	// InitializeSystemClass(nilClass       , objectClass , "Nil"       );
+	// InitializeSystemClass(arrayClass     , objectClass , "Array"     );
+	u.InitializeSystemClass(u.ObjectClass, nil, "Object")
+	u.InitializeSystemClass(u.ClassClass, u.ObjectClass, "Class")
 	u.InitializeSystemClass(u.MetaclassClass, u.ClassClass, "Metaclass")
 	u.InitializeSystemClass(u.NilClass, u.ObjectClass, "Nil")
 	u.InitializeSystemClass(u.ArrayClass, u.ObjectClass, "Array")
-	// initializeSystemClass(methodClass    , arrayClass  , "Method"    );
-	// initializeSystemClass(symbolClass    , objectClass , "Symbol"    );
-	// initializeSystemClass(integerClass   , objectClass , "Integer"   );
-	// initializeSystemClass(bigintegerClass, objectClass , "BigInteger");
+	// InitializeSystemClass(methodClass    , arrayClass  , "Method"    );
+	// InitializeSystemClass(symbolClass    , objectClass , "Symbol"    );
+	// InitializeSystemClass(integerClass   , objectClass , "Integer"   );
+	// InitializeSystemClass(bigintegerClass, objectClass , "BigInteger");
 	u.InitializeSystemClass(u.MethodClass, u.ArrayClass, "Method")
 	u.InitializeSystemClass(u.SymbolClass, u.ObjectClass, "Symbol")
 	u.InitializeSystemClass(u.IntegerClass, u.ObjectClass, "Integer")
 	u.InitializeSystemClass(u.BigIntegerClass, u.ObjectClass, "BigInteger")
 
-	// initializeSystemClass(frameClass     , arrayClass  , "Frame"     );
-	// initializeSystemClass(primitiveClass , objectClass , "Primitive" );
-	// initializeSystemClass(stringClass    , objectClass , "String"    );
-	// initializeSystemClass(doubleClass    , objectClass , "Double"    );
+	// InitializeSystemClass(frameClass     , arrayClass  , "Frame"     );
+	// InitializeSystemClass(primitiveClass , objectClass , "Primitive" );
+	// InitializeSystemClass(stringClass    , objectClass , "String"    );
+	// InitializeSystemClass(doubleClass    , objectClass , "Double"    );
 	u.InitializeSystemClass(u.FrameClass, u.ArrayClass, "Frame")
 	u.InitializeSystemClass(u.PrimitiveClass, u.ObjectClass, "Primitive")
 	u.InitializeSystemClass(u.StringClass, u.ObjectClass, "String")
@@ -396,9 +398,9 @@ func (u *Universe) initialize(arguments []string) {
 	u.SetGlobal(u.SymbolFor("Block"), u.BlockClass)
 	// // Create a fake bootstrap method to simplify later frame traversal
 	// Method bootstrapMethod = newMethod(symbolFor("bootstrap"), 1, 0);
-	bootstrapMethod := NewMethod(u.SymbolFor("bootstrap"), 1, 0)
+	bootstrapMethod := u.NewMethod(u.SymbolFor("bootstrap"), 1, 0)
 	// bootstrapMethod.setBytecode(0, Bytecodes.halt);
-	bootstrapMethod.SetBytecode(0, Halt)
+	bootstrapMethod.SetBytecode(0, halt)
 	// bootstrapMethod.setNumberOfLocals(0);
 	bootstrapMethod.SetNumberOfLocals(0)
 	// bootstrapMethod.setMaximumNumberOfStackElements(2);
@@ -423,7 +425,7 @@ func (u *Universe) initialize(arguments []string) {
 	argumentsArray := u.NewArrayFromStrings(arguments)
 	// // Create a fake bootstrap frame with the system object on the stack
 	// Frame bootstrapFrame = Interpreter.pushNewFrame(bootstrapMethod);
-	bootstrapFrame := u.GetInterpreter().PushNewFrame(bootstrapMethod)
+	bootstrapFrame := GetInterpreter().PushNewFrame(bootstrapMethod)
 	// bootstrapFrame.push(systemObject);
 	bootstrapFrame.Push(u.SystemObject)
 	// bootstrapFrame.push(argumentsArray);
@@ -456,28 +458,6 @@ func (u *Universe) Assert(value bool) {
 		fmt.Println("Assertion failed")
 	}
 }
-
-// public static Symbol symbolFor(java.lang.String string)
-// {
-//   // Lookup the symbol in the symbol table
-//   Symbol result = SymbolTable.lookup(string);
-//   if (result != null) return result;
-
-//	  // Create a new symbol and return it
-//	  result = newSymbol(string);
-//	  return result;
-//	}
-// func (u *Universe) SymbolFor(str string) *Symbol {
-// 	// Lookup the symbol in the symbol table
-// 	result := u.symboltable.lookup(str)
-// 	if result != nil {
-// 		return result
-// 	}
-
-// 	// Create a new symbol and return it
-// 	result = u.NewSymbol(str)
-// 	return result
-// }
 
 // public static Array newArray(int length)
 // {
@@ -840,7 +820,7 @@ func (u *Universe) NewSystemClass() *Class {
 	return systemClass
 }
 
-// public static void initializeSystemClass(Class systemClass, Class superClass, java.lang.String name)
+// public static void InitializeSystemClass(Class systemClass, Class superClass, java.lang.String name)
 // {
 //   // Initialize the superclass hierarchy
 //   if (superClass != null) {
@@ -1046,10 +1026,11 @@ func LoadClass(name *Symbol, systemClass *Class) *Class {
 	// Try loading the class from all different paths
 	for _, cpEntry := range u.classPath {
 		// Load the class from a file and return the loaded class
-		result := SourcecodeCompiler.compileClass(cpEntry+u.FileSep, name.String(), systemClass)
+		// SourceCodeCompiler
+		result := SourcecodeCompileClass(cpEntry+u.FileSep, name.String(), systemClass)
 		if u.dumpBytecodes {
-			Disassembler.dump(result.getSOMClass())
-			Disassembler.dump(result)
+			DisassemblerDump(result.GetSOMClass())
+			DisassemblerDump(result)
 		}
 		return result
 	}
@@ -1072,9 +1053,9 @@ func LoadClass(name *Symbol, systemClass *Class) *Class {
 func LoadShellClass(stmt string) *Class {
 	u := GetUniverse()
 	// Load the class from a stream and return the loaded class
-	result := SourcecodeCompiler.compileClass(stmt, nil)
+	result := SourcecodeCompileClass("", stmt, nil)
 	if u.dumpBytecodes {
-		Disassembler.dump(result)
+		DisassemblerDump(result)
 	}
 	return result
 }

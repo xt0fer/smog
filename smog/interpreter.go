@@ -75,43 +75,45 @@ func (itp *Interpreter) DoPushArgument(bytecodeIndex int) {
 
 func (itp *Interpreter) DoPushField(bytecodeIndex int) {
 	// Handle the push field bytecode
-	fieldName := itp.GetMethod().GetConstant(bytecodeIndex)
+	fieldName := itp.GetMethod().signature //.GetConstant(bytecodeIndex)
 
 	// Get the field index from the field name
 	fieldIndex := itp.GetSelf().GetFieldIndex(fieldName)
 
 	// Push the field with the computed index onto the stack
-	itp.Frame.push(itp.GetSelf().GetField(fieldIndex))
+	itp.Frame.Push(itp.GetSelf().GetField(fieldIndex))
 }
 
 func (itp *Interpreter) DoPushBlock(bytecodeIndex int) {
 	// Handle the push block bytecode
-	blockMethod := itp.GetMethod().GetConstant(bytecodeIndex)
+	blockMethod := itp.GetMethod() //.signature //.GetConstant(bytecodeIndex)
 
 	// Push a new block with the current Frame as context onto the stack
-	itp.Frame.push(Universe().newBlock(blockMethod, itp.Frame,
+	itp.Frame.Push(GetUniverse().NewBlock(blockMethod, itp.Frame,
 		blockMethod.GetNumberOfArguments()))
 }
 
 func (itp *Interpreter) DoPushConstant(bytecodeIndex int) {
 	// Handle the push constant bytecode
-	itp.Frame.push(itp.GetMethod().GetConstant(bytecodeIndex))
+	itp.Frame.Push(itp.GetMethod().GetConstant(bytecodeIndex))
 }
 
 func (itp *Interpreter) DoPushGlobal(bytecodeIndex int) {
 	// Handle the push global bytecode
-	globalName := itp.GetMethod().GetConstant(bytecodeIndex)
+	globalName := itp.GetMethod().signature
+	//.GetConstant(bytecodeIndex)
 
 	// Get the global from the universe
-	global := Universe().GetGlobal(globalName)
+	global := GetUniverse().GetGlobal(globalName).(*Object)
 
 	if global != nil {
 		// Push the global onto the stack
 		itp.Frame.Push(global)
 	} else {
 		// Send 'unknownGlobal:' to self
-		arguments := []Object{globalName}
-		itp.GetSelf().send("unknownGlobal:", arguments)
+		//arguments := []*Symbol{globalName}
+
+		itp.GetSelf().Send("unknownGlobal:", nil) //arguments)
 	}
 }
 
@@ -122,36 +124,38 @@ func (itp *Interpreter) DoPop() {
 
 func (itp *Interpreter) DoPopLocal(bytecodeIndex int) {
 	// Handle the pop local bytecode
-	itp.Frame.SetLocal(itp.GetMethod().GetBytecode(bytecodeIndex+1),
-		itp.GetMethod().GetBytecode(bytecodeIndex+2),
+	itp.Frame.SetLocalLevel(int(itp.GetMethod().GetBytecode(bytecodeIndex+1)),
+		int(itp.GetMethod().GetBytecode(bytecodeIndex+2)),
 		itp.Frame.Pop())
 }
 
 func (itp *Interpreter) DoPopArgument(bytecodeIndex int) {
 	// Handle the pop argument bytecode
-	itp.Frame.SetArgument(itp.GetMethod().GetBytecode(bytecodeIndex+1),
-		itp.GetMethod().GetBytecode(bytecodeIndex+2),
+	itp.Frame.SetArgument(int(itp.GetMethod().GetBytecode(bytecodeIndex+1)),
+		int(itp.GetMethod().GetBytecode(bytecodeIndex+2)),
 		itp.Frame.Pop())
 }
 
 func (itp *Interpreter) DoPopField(bytecodeIndex int) {
 	// Handle the pop field bytecode
-	fieldName := itp.GetMethod().GetConstant(bytecodeIndex)
+	fieldName := itp.GetMethod().signature
+	//.GetConstant(bytecodeIndex)
 
 	// Get the field index from the field name
 	fieldIndex := itp.GetSelf().GetFieldIndex(fieldName)
 
 	// Set the field with the computed index to the value popped from the stack
-	itp.GetSelf().setField(fieldIndex, itp.Frame.Pop())
+	itp.GetSelf().SetField(fieldIndex, itp.Frame.Pop())
 }
 
 func (itp *Interpreter) DoSuperSend(bytecodeIndex int) {
 	// Handle the super send bytecode
-	signature := itp.GetMethod().GetConstant(bytecodeIndex)
+	signature := itp.GetMethod().signature
+	//.GetConstant(bytecodeIndex)
 
 	// Send the message
 	// Lookup the invokable with the given signature
-	invokable := itp.GetMethod().GetHolder().GetSuperClass().lookupInvokable(signature)
+	invokable := itp.GetMethod().GetHolder().GetSuperClass().LookupInvokable(signature)
 
 	if invokable != nil {
 		// Invoke the invokable in the current frame
@@ -162,7 +166,7 @@ func (itp *Interpreter) DoSuperSend(bytecodeIndex int) {
 		numberOfArguments := signature.GetNumberOfSignatureArguments()
 
 		// Compute the receiver
-		receiver := itp.Frame.GetStackElement(numberOfArguments - 1)
+		receiver := itp.Frame.GetStackElement(numberOfArguments - 1).(*Object)
 
 		// Allocate an array with enough room to hold all arguments
 		argumentsArray := GetUniverse().NewArray(numberOfArguments)
@@ -173,14 +177,14 @@ func (itp *Interpreter) DoSuperSend(bytecodeIndex int) {
 		}
 
 		// Send 'doesNotUnderstand:arguments:' to the receiver object
-		arguments := []Object{signature, argumentsArray}
-		receiver.Send("doesNotUnderstand:arguments:", arguments)
+		//arguments := []Object{signature, argumentsArray}
+		receiver.Send("doesNotUnderstand:arguments:", nil) // arguments)
 	}
 }
 
 func (itp *Interpreter) DoReturnLocal() {
 	// Handle the return local bytecode
-	result := itp.Frame.Pop()
+	result := itp.Frame.Pop().(*Object)
 
 	// Pop the top frame and push the result
 	itp.PopFrameAndPushResult(result)
@@ -188,7 +192,7 @@ func (itp *Interpreter) DoReturnLocal() {
 
 func (itp *Interpreter) DoReturnNonLocal() {
 	// Handle the return non local bytecode
-	result := itp.Frame.Pop()
+	result := itp.Frame.Pop().(*Object)
 
 	// Compute the context for the non-local return
 	context := itp.Frame.GetOuterContext()
@@ -198,16 +202,18 @@ func (itp *Interpreter) DoReturnNonLocal() {
 		// Try to recover by sending 'escapedBlock:' to the sending object
 		// this can get a bit nasty when using nested blocks. In this case
 		// the "sender" will be the surrounding block and not the object that
-		// acutally sent the 'value' message.
-		block := itp.Frame.GetArgument(0, 0)
-		sender := itp.Frame.GetPreviousFrame().GetOuterContext().GetArgument(0, 0)
-		arguments := []Object{block}
+		// actually sent the 'value' message.
+
+		//block := itp.Frame.GetArgument(0, 0).(*Block)                                        // needs to be a Block
+
+		sender := itp.Frame.GetPreviousFrame().GetOuterContext().GetArgument(0, 0).(*Object) // Object
+		//arguments := []Object{block.(*Block)}
 
 		// pop the frame of the currently executing block...
 		itp.PopFrame()
 
 		// ... and execute the escapedBlock message instead
-		sender.Send("escapedBlock:", arguments)
+		sender.Send("escapedBlock:", nil) // arguments)
 
 		return
 	}
@@ -223,7 +229,8 @@ func (itp *Interpreter) DoReturnNonLocal() {
 
 func (itp *Interpreter) DoSend(bytecodeIndex int) {
 	// Handle the send bytecode
-	signature := itp.GetMethod().GetConstant(bytecodeIndex)
+	signature := itp.GetMethod().signature
+	//GetConstant(bytecodeIndex)
 
 	// Get the number of arguments from the signature
 	numberOfArguments := signature.GetNumberOfSignatureArguments()
@@ -406,11 +413,11 @@ func (itp *Interpreter) Send(signature *Symbol, receiverClass *Class, bytecodeIn
 			argumentsArray.SetIndexableField(i, itp.Frame.Pop())
 		}
 
-		// Send 'doesNotUnderstand:arguments:' to the receiver object
 		log.Println("Send 'doesNotUnderstand:arguments:' to the receiver object, NEED TO ADD argumentsArray")
-		arguments := []string{signature.String()}
+		//arguments := []string{signature.String()}
 
-		receiver.Send("doesNotUnderstand:arguments:", arguments)
+		// Send 'doesNotUnderstand:arguments:' to the receiver object
+		receiver.Send("doesNotUnderstand:arguments:", nil) //arguments)
 	}
 }
 
@@ -428,31 +435,15 @@ func (itp *Interpreter) PopFrame() *Frame {
 	return result
 }
 
-func (itp *Interpreter) PopFrameAndPushResult(result Object) {
+func (itp *Interpreter) PopFrameAndPushResult(result *Object) {
 	// Pop the top frame from the interpreter frame stack and compute the number of arguments
-	numberOfArguments := PopFrame().GetMethod().GetNumberOfArguments()
+	numberOfArguments := itp.PopFrame().GetMethod().GetNumberOfArguments()
 
 	// Pop the arguments
 	for i := 0; i < numberOfArguments; i++ {
-		Frame.Pop()
+		itp.Frame.Pop()
 	}
 
 	// Push the result
-	Frame.Push(result)
-}
-
-// public static Frame pushNewFrame(Method method)
-// {
-//   // Allocate a new frame and make it the current one
-//   frame = Universe.newFrame(frame, method);
-
-//	  // Return the freshly allocated and pushed frame
-//	  return frame;
-//	}
-func (itp *Interpreter) PushNewFrame(method *Method) *Frame {
-	// Allocate a new frame and make it the current one
-	Frame := GetUniverse().NewFrame(itp.Frame, method)
-
-	// Return the freshly allocated and pushed frame
-	return Frame
+	itp.Frame.Push(result)
 }

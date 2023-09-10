@@ -400,7 +400,7 @@ func (u *Universe) initialize(arguments []string) {
 	// Method bootstrapMethod = newMethod(symbolFor("bootstrap"), 1, 0);
 	bootstrapMethod := u.NewMethod(u.SymbolFor("bootstrap"), 1, 0)
 	// bootstrapMethod.setBytecode(0, Bytecodes.halt);
-	bootstrapMethod.SetBytecode(0, halt)
+	bootstrapMethod.SetBytecode(0, HALT)
 	// bootstrapMethod.setNumberOfLocals(0);
 	bootstrapMethod.SetNumberOfLocals(0)
 	// bootstrapMethod.setMaximumNumberOfStackElements(2);

@@ -9,22 +9,22 @@ const (
 )
 
 const (
-	halt byte = iota //0
-	dup
-	push_local
-	push_argument
-	push_field
-	push_block //5
-	push_constant
-	push_global
-	pop
-	pop_local
-	pop_argument //10
-	pop_field
-	send
-	super_send
-	return_local
-	return_non_local //15
+	HALT byte = iota //0
+	DUP
+	PUSHLOCAL
+	PUSHARGUMENT
+	PUSHFIELD
+	PUSHBLOCK //5
+	PUSHCONSTANT
+	PUSHGLOBAL
+	POP
+	POPLOCAL
+	POPARGUMENT //10
+	POPFIELD
+	SEND
+	SUPERSEND
+	RETURNLOCAL
+	RETURNNONLOCAL //15
 )
 
 var bytecodeNames [numBytecodes]string = [numBytecodes]string{
@@ -264,97 +264,97 @@ func (itp *Interpreter) Start() {
 		// Handle the current bytecode
 		switch bytecode {
 
-		case halt:
+		case HALT:
 			{
 				// Handle the halt bytecode
 				return
 			}
 
-		case dup:
+		case DUP:
 			{
 				itp.DoDup()
 				break
 			}
 
-		case push_local:
+		case PUSHLOCAL:
 			{
 				itp.DoPushLocal(bytecodeIndex)
 				break
 			}
 
-		case push_argument:
+		case PUSHARGUMENT:
 			{
 				itp.DoPushArgument(bytecodeIndex)
 				break
 			}
 
-		case push_field:
+		case PUSHFIELD:
 			{
 				itp.DoPushField(bytecodeIndex)
 				break
 			}
 
-		case push_block:
+		case PUSHBLOCK:
 			{
 				itp.DoPushBlock(bytecodeIndex)
 				break
 			}
 
-		case push_constant:
+		case PUSHCONSTANT:
 			{
 				itp.DoPushConstant(bytecodeIndex)
 				break
 			}
 
-		case push_global:
+		case PUSHGLOBAL:
 			{
 				itp.DoPushGlobal(bytecodeIndex)
 				break
 			}
 
-		case pop:
+		case POP:
 			{
 				itp.DoPop()
 				break
 			}
 
-		case pop_local:
+		case POPLOCAL:
 			{
 				itp.DoPopLocal(bytecodeIndex)
 				break
 			}
 
-		case pop_argument:
+		case POPARGUMENT:
 			{
 				itp.DoPopArgument(bytecodeIndex)
 				break
 			}
 
-		case pop_field:
+		case POPFIELD:
 			{
 				itp.DoPopField(bytecodeIndex)
 				break
 			}
 
-		case send:
+		case SEND:
 			{
 				itp.DoSend(bytecodeIndex)
 				break
 			}
 
-		case super_send:
+		case SUPERSEND:
 			{
 				itp.DoSuperSend(bytecodeIndex)
 				break
 			}
 
-		case return_local:
+		case RETURNLOCAL:
 			{
 				itp.DoReturnLocal()
 				break
 			}
 
-		case return_non_local:
+		case RETURNNONLOCAL:
 			{
 				itp.DoReturnNonLocal()
 				break

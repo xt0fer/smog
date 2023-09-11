@@ -100,13 +100,18 @@ class Universe {
     //      | paths cps |
     //      "Create a new tokenizer to split up the string of directories"
     //      paths = cp split: ':'.
-    
     //      cps = Vector new.
     //      cps appendAll: self defaultClassPath.
     //      cps appendAll: paths.
-    
     //      classPath = cps asArray
     //    )
+    func setupClassPath(_ cp: String) {
+        let paths = cp.split(separator: ":")
+        var cps = [String]()
+        cps.append(contentsOf: self.defaultClassPath)
+        cps.append(contentsOf: paths)
+        self.classPath = cps
+    }
     
     //    handleArguments: args = (
     //      | gotClasspath remainingArgs cnt i sawOthers |

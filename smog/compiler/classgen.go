@@ -21,6 +21,15 @@ type ClassGenerator struct {
 	classMethods    []smog.Invokable
 }
 
+func NewClassGenerator() *ClassGenerator {
+	cg := &ClassGenerator{}
+	cg.instanceFields = make([]*smog.Object, 0)
+	cg.instanceMethods = make([]smog.Invokable, 0)
+	cg.classFields = make([]*smog.Object, 0)
+	cg.classMethods = make([]smog.Invokable, 0)
+	return cg
+}
+
 //	public void setName(Symbol name) {
 //		this.name = name;
 //	}

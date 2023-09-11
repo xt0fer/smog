@@ -16,11 +16,11 @@ func NewCompiler() *Compiler {
 	return c
 }
 
-func (c *Compiler) CompileClass(path string, file string, systemClass *smog.Class) *smog.Class {
+func (c *Compiler) CompileClassInFile(path string, file string, systemClass *smog.Class) *smog.Class {
 	return c.Parser.CompileClass(path, file, systemClass)
 }
 
-func (c *Compiler) CompileClassString(stmt string, systemClass *smog.Class) *smog.Class {
+func (c *Compiler) CompileClassInString(stmt string, systemClass *smog.Class) *smog.Class {
 	return c.Parser.CompileClassString(stmt, systemClass)
 }
 

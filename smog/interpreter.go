@@ -27,7 +27,7 @@ const (
 	RETURNNONLOCAL //15
 )
 
-var bytecodeNames [numBytecodes]string = [numBytecodes]string{
+var BytecodeNames [numBytecodes]string = [numBytecodes]string{
 	"HALT            ",
 	"DUP             ",
 	"PUSH_LOCAL      ",
@@ -47,6 +47,11 @@ var bytecodeNames [numBytecodes]string = [numBytecodes]string{
 }
 
 var bytecodeLength [numBytecodes]int = [numBytecodes]int{1, 1, 3, 3, 2, 2, 2, 2, 1, 3, 3, 2, 2, 2, 1, 1}
+
+func GetBytecodeLength(bytecode byte) int {
+	// Get the length of the bytecode
+	return bytecodeLength[bytecode]
+}
 
 // interpreter
 

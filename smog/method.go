@@ -84,7 +84,7 @@ func (m *Method) SetNumberOfLocals(value int) {
 //	  // Get the maximum number of stack elements (converted to a Java integer)
 //	  return ((Integer) getField(maximumNumberOfStackElementsIndex)).getEmbeddedInteger();
 //	}
-func (m *Method) getMaximumNumberOfStackElements() int {
+func (m *Method) GetMaximumNumberOfStackElements() int {
 	return m.maximumNumberOfStackElementsIndex
 }
 

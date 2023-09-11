@@ -1027,10 +1027,10 @@ func LoadClass(name *Symbol, systemClass *Class) *Class {
 	for _, cpEntry := range u.classPath {
 		// Load the class from a file and return the loaded class
 		// SourceCodeCompiler
-		result := SourcecodeCompileClass(cpEntry+u.FileSep, name.String(), systemClass)
+		result := compiler.CompileClass(cpEntry+u.FileSep, name.String(), systemClass)
 		if u.dumpBytecodes {
-			DisassemblerDump(result.GetSOMClass())
-			DisassemblerDump(result)
+			compiler.Dump(result.GetSOMClass())
+			compiler.Dump(result)
 		}
 		return result
 	}
@@ -1053,9 +1053,9 @@ func LoadClass(name *Symbol, systemClass *Class) *Class {
 func LoadShellClass(stmt string) *Class {
 	u := GetUniverse()
 	// Load the class from a stream and return the loaded class
-	result := SourcecodeCompileClass("", stmt, nil)
+	result := compiler.CompileClass("", stmt, nil)
 	if u.dumpBytecodes {
-		DisassemblerDump(result)
+		compiler.Dump(result)
 	}
 	return result
 }

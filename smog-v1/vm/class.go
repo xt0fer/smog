@@ -3,30 +3,30 @@ package vm
 import "fmt"
 
 type IsClass interface {
-	getSuperClass() IsClass;
-	setSuperClass(value IsClass);
-	hasSuperClass() bool;
-	getName() *Symbol;
-	setName(value *Symbol);
-	getInstanceFields() *Array;
-	setInstanceFields(value *Array);
-	getInstanceInvokables() *Array;
-	setInstanceInvokables(value *Array);
-	getNumberOfInstanceInvokables() int;
-	getInstanceInvokable(index int) Invokable;
-	setInstanceInvokable(index int, value Invokable);
-	getDefaultNumberOfFields() int;
-	lookupInvokable(signature *Symbol) Invokable;
-	lookupFieldIndex(fieldName *Symbol) int;
-	addInstanceInvokable(value Invokable) bool;
-	addInstancePrimitive(value *Primitive);
-	getInstanceFieldName(index int) *Symbol;
-	getNumberOfInstanceFields() int;
-	getNumberOfSuperInstanceFields() int;
-	setInstanceFieldsFromStrings(fields []string);
-	hasPrimitives() bool;
-	loadPrimitives();
-	replaceBytecodes();
+	getSuperClass() IsClass
+	setSuperClass(value IsClass)
+	hasSuperClass() bool
+	getName() *Symbol
+	setName(value *Symbol)
+	getInstanceFields() *Array
+	setInstanceFields(value *Array)
+	getInstanceInvokables() *Array
+	setInstanceInvokables(value *Array)
+	getNumberOfInstanceInvokables() int
+	getInstanceInvokable(index int) Invokable
+	setInstanceInvokable(index int, value Invokable)
+	getDefaultNumberOfFields() int
+	lookupInvokable(signature *Symbol) Invokable
+	lookupFieldIndex(fieldName *Symbol) int
+	addInstanceInvokable(value Invokable) bool
+	addInstancePrimitive(value *Primitive)
+	getInstanceFieldName(index int) *Symbol
+	getNumberOfInstanceFields() int
+	getNumberOfSuperInstanceFields() int
+	setInstanceFieldsFromStrings(fields []string)
+	hasPrimitives() bool
+	loadPrimitives()
+	replaceBytecodes()
 }
 type Class struct {
 	Object
@@ -194,8 +194,8 @@ func (c *Class) addInstanceInvokable(value Invokable) bool {
 
 func (c *Class) addInstancePrimitive(value *Primitive) {
 	if c.addInstanceInvokable(value) {
-		fmt.println("Warning: Primitive " + value.getSignature().String())
-		fmt.println(" is not in class definition for class " + c.getName().String())
+		fmt.println("Warning: Primitive " + value.getSignature().ToString())
+		fmt.println(" is not in class definition for class " + c.getName().ToString())
 	}
 }
 

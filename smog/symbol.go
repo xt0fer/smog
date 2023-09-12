@@ -1,7 +1,7 @@
 package smog
 
 type Symbol struct {
-	Object
+	String
 	Name                       string
 	NumberOfSignatureArguments int
 }
@@ -18,7 +18,7 @@ func (s *Symbol) SetString(value string) {
 	s.determineNumberOfSignatureArguments()
 }
 
-func (s *Symbol) String() string {
+func (s *Symbol) ToString() string {
 	return s.Name
 }
 

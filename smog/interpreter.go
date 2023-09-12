@@ -419,7 +419,7 @@ func (itp *Interpreter) Send(signature *Symbol, receiverClass *Class, bytecodeIn
 		}
 
 		log.Println("Send 'doesNotUnderstand:arguments:' to the receiver object, NEED TO ADD argumentsArray")
-		//arguments := []string{signature.String()}
+		//arguments := []string{signature.ToString()}
 
 		// Send 'doesNotUnderstand:arguments:' to the receiver object
 		receiver.Send("doesNotUnderstand:arguments:", nil) //arguments)

@@ -190,8 +190,8 @@ func (c *Class) AddInstanceInvokable(value Invokable) bool {
 
 func (c *Class) AddInstancePrimitive(value *Primitive) {
 	if c.AddInstanceInvokable(value) {
-		fmt.Println("Warning: Primitive " + value.GetSignature().String())
-		fmt.Println(" is not in class definition for class " + c.GetName().String())
+		fmt.Println("Warning: Primitive " + value.GetSignature().ToString())
+		fmt.Println(" is not in class definition for class " + c.GetName().ToString())
 	}
 }
 

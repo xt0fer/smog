@@ -46,7 +46,7 @@ func (p *Primitive) IsEmpty() bool {
 
 func (p *Primitive) Invoke(frame *Frame) {
 	// Write a warning to the screen
-	log.Println("Warning: undefined primitive " + p.signature.String() + " called")
+	log.Println("Warning: undefined primitive " + p.signature.ToString() + " called")
 }
 
 //   public static Primitive getEmptyPrimitive(java.lang.String signatureString)

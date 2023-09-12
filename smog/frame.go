@@ -336,8 +336,8 @@ func (f *Frame) CopyArgumentsFrom(frame *Frame) {
 //		 if (hasPreviousFrame()) getPreviousFrame().printStackTrace();
 //	   }
 func (f *Frame) PrintStackTrace() {
-	fmt.Println(f.GetMethod().GetHolder().GetName().String())
-	fmt.Println(f.GetBytecodeIndex(), "@", f.GetMethod().GetSignature().String())
+	fmt.Println(f.GetMethod().GetHolder().GetName().ToString())
+	fmt.Println(f.GetBytecodeIndex(), "@", f.GetMethod().GetSignature().ToString())
 	if f.HasPreviousFrame() {
 		f.GetPreviousFrame().PrintStackTrace()
 	}

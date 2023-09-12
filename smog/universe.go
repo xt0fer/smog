@@ -606,7 +606,7 @@ func (u *Universe) NewFrame(previousFrame *Frame, method *Method) *Frame {
 	// Compute the maximum number of stack locations (including arguments, locals and
 	// extra buffer to support doesNotUnderstand) and set the number of
 	// indexable fields accordingly
-	length := method.GetNumberOfArguments() + method.GetNumberOfLocals() + method.getMaximumNumberOfStackElements() + 2
+	length := method.GetNumberOfArguments() + method.GetNumberOfLocals() + method.GetMaximumNumberOfStackElements() + 2
 	result.SetNumberOfIndexableFields(length)
 	// Set the method of the frame and the previous frame
 	result.SetMethod(method)
@@ -989,7 +989,7 @@ func (u *Universe) LoadClass(name *Symbol) *Class {
 func loadSystemClass(systemClass *Class) {
 	result := LoadClass(systemClass.GetName(), systemClass)
 	if result == nil {
-		fmt.Println(systemClass.GetName().String())
+		fmt.Println(systemClass.GetName().ToString())
 		fmt.Println("Failed: loadClass(systemClass.getName(), systemClass)")
 	}
 	if result.HasPrimitives() {
@@ -1027,7 +1027,7 @@ func LoadClass(name *Symbol, systemClass *Class) *Class {
 	for _, cpEntry := range u.classPath {
 		// Load the class from a file and return the loaded class
 		// SourceCodeCompiler
-		result := compiler.CompileClass(cpEntry+u.FileSep, name.String(), systemClass)
+		result := compiler.CompileClass(cpEntry+u.FileSep, name.ToString(), systemClass)
 		if u.dumpBytecodes {
 			compiler.Dump(result.GetSOMClass())
 			compiler.Dump(result)
@@ -1035,7 +1035,7 @@ func LoadClass(name *Symbol, systemClass *Class) *Class {
 		return result
 	}
 	// The class could not be found.
-	fmt.Println(name.String())
+	fmt.Println(name.ToString())
 	fmt.Println(" The class could not be found")
 	return nil
 }
@@ -1053,9 +1053,9 @@ func LoadClass(name *Symbol, systemClass *Class) *Class {
 func LoadShellClass(stmt string) *Class {
 	u := GetUniverse()
 	// Load the class from a stream and return the loaded class
-	result := compiler.CompileClass("", stmt, nil)
+	result := CompileClass("", stmt, nil)
 	if u.dumpBytecodes {
-		compiler.Dump(result)
+		Dump(result)
 	}
 	return result
 }

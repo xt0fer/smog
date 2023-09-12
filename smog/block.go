@@ -1,7 +1,7 @@
 package smog
 
 type Block struct {
-	*Object
+	Object
 	Method              *Method
 	Context             *Frame
 	numberOfBlockFields int

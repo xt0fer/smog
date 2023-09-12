@@ -8,18 +8,18 @@ type ClassGenerator struct {
 	name            *Symbol
 	superName       *Symbol
 	classSide       bool
-	instanceFields  []*Object
-	instanceMethods []Invokable
-	classFields     []*Object
-	classMethods    []Invokable
+	instanceFields  *Array
+	instanceMethods *Array
+	classFields     *Array
+	classMethods    *Array
 }
 
 func NewClassGenerator() *ClassGenerator {
 	cg := &ClassGenerator{}
-	cg.instanceFields = make([]*Object, 0)
-	cg.instanceMethods = make([]Invokable, 0)
-	cg.classFields = make([]*Object, 0)
-	cg.classMethods = make([]Invokable, 0)
+	cg.instanceFields = NewArray(0)
+	cg.instanceMethods = NewArray(0)
+	cg.classFields = NewArray(0)
+	cg.classMethods = NewArray(0)
 	return cg
 }
 
@@ -126,18 +126,18 @@ func (cg *ClassGenerator) Assemble() *Class {
 	// Load the super class
 	superClass := u.LoadClass(cg.superName)
 	// Allocate the class of the resulting class
-	resultClass := u.NewClass(u.metaclassClass)
+	resultClass := u.NewClass(u.MetaclassClass)
 	// Initialize the class of the resulting class
-	resultClass.SetInstanceFields(u.NewArray(cg.classFields))
-	resultClass.SetInstanceInvokables(u.NewArray(cg.classMethods))
+	resultClass.SetInstanceFields(u.NewArrayFromArray(cg.classFields))
+	resultClass.SetInstanceInvokables(u.NewArrayFromArray(cg.classMethods))
 	resultClass.SetName(u.SymbolFor(ccname))
 	superMClass := superClass.GetSOMClass()
 	resultClass.SetSuperClass(superMClass)
 	// Allocate the resulting class
 	result := u.NewClass(resultClass)
 	// Initialize the resulting class
-	result.SetInstanceFields(u.NewArray(instanceFields))
-	result.SetInstanceInvokables(u.NewArray(instanceMethods))
+	result.SetInstanceFields(u.NewArrayFromArray(instanceFields))
+	result.SetInstanceInvokables(u.NewArrayFromArray(instanceMethods))
 	result.SetName(cg.name)
 	result.SetSuperClass(superClass)
 	return result
@@ -156,10 +156,10 @@ func (cg *ClassGenerator) Assemble() *Class {
 // the NEWARRAY issue, need s special NewArray in Universe to handle these initializations
 func (cg *ClassGenerator) AssembleSystemClass(systemClass *Class) {
 	u := GetUniverse()
-	systemClass.SetInstanceInvokables(u.NewArray(cg.instanceMethods))
-	systemClass.SetInstanceFields(u.NewArray(cg.instanceFields))
+	systemClass.SetInstanceInvokables(u.NewArrayFromArray(cg.instanceMethods))
+	systemClass.SetInstanceFields(u.NewArrayFromArray(cg.instanceFields))
 	// class-bound == class-instance-bound
 	superMClass := systemClass.GetSOMClass()
-	superMClass.SetInstanceInvokables(u.NewArray(cg.classMethods))
-	superMClass.SetInstanceFields(u.NewArray(cg.classFields))
+	superMClass.SetInstanceInvokables(u.NewArrayFromArray(cg.classMethods))
+	superMClass.SetInstanceFields(u.NewArrayFromArray(cg.classFields))
 }

@@ -1,14 +1,10 @@
 package smog
 
-import (
-	"bufio"
-	"fmt"
-	"io"
-	"strconv"
-	"unicode"
-)
-
 type BytecodeGenerator struct {
+}
+
+func NewBytecodeGenerator() *BytecodeGenerator {
+	return &BytecodeGenerator{}
 }
 
 func (bc *BytecodeGenerator) EmitPOP(mgenc *MethodGenerator) {

@@ -496,18 +496,19 @@ func (u *Universe) NewArray(length int) *Array {
 // // Return the allocated and initialized array
 // return result;
 // }
-// func (u *Universe) NewArray(list []interface{}) *Array {
-// 	// Allocate a new array with the same length as the list
-// 	result := u.NewArray(len(list))
+func (u *Universe) NewArrayFromArray(list *Array) *Array {
+	// Allocate a new array with the same length as the list
+	listsize := list.GetNumberOfIndexableFields()
+	result := u.NewArray(listsize)
 
-// 	// Copy all elements from the list into the array
-// 	for i := 0; i < len(list); i++ {
-// 		result.SetIndexableField(i, list[i])
-// 	}
+	// Copy all elements from the list into the array
+	for i := 0; i < listsize; i++ {
+		result.SetIndexableField(i, listsize)
+	}
 
-// 	// Return the allocated and initialized array
-// 	return result
-// }
+	// Return the allocated and initialized array
+	return result
+}
 
 // public static Array newArray(java.lang.String[] stringArray)
 // {

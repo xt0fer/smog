@@ -1,4 +1,4 @@
-package smog-v2
+package smog
 
 import (
 	"reflect"

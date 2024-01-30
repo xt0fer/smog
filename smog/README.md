@@ -17,6 +17,25 @@ each vmobject will have fields, clazz, and if a primitive, a value.
 
 ### Instructions
 
+## Bytescodes
+
+	0, halt, 1
+	1, dup, 1
+	2, push_local, 3
+	3, push_argument 3
+	4, push_field 2
+	5, push_block 2
+	6, push_constant 2
+	7, push_global 2
+	8, pop 1
+	9, pop_local 3
+	10, pop_argument 3
+	11, pop_field 2
+	12, send 2
+	13, super_send 2
+	14, return_local 1
+	15, return_non_local 1
+
 - HLT - halt the machine
 - DUP - duplicate the top of the stack
 - POP - pop the top of the stack
@@ -41,6 +60,8 @@ NONLOCAL RETURN is an exit expression executed inside of a block. It gets the cu
 ```
 BLOCK i creates a block object from the block value on the given index and pushes it to the stack. The block captures the current call frame and the current object context.
 ```
+
+a C++ impl opcodes
 
 • LIT i retrieves a constant value from the constant pool at the index i and pushes it on the stack. The item can be either integer, double or string value.
 • GET SLOT i pops a value from the operand stack, assuming it is an object. Then it retrieves a value with index i from the constatns pool, assuming it is a string. It then retrieves the value stored in the slot with the name specified by the string and pushes it onto the stack.

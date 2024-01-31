@@ -1,24 +1,29 @@
 package smog
 
-type VMObjType int
-
-// const (
-// 	VMDouble VMObjType = iota
-// 	VMInteger
-// 	VMString
-// 	VMSymbol
-// 	VMArray
-// 	VMMethod
-// 	VMBlock
-// 	VMBlock1
-// 	VMBlock2
-// )
+const (
+	clsDouble  = "Double"
+	clsString  = "String"
+	clsSymbol  = "Symbol"
+	clsArray   = "Array"
+	clsMethod  = "Method"
+	clsBlock   = "Block"
+	clsBlock1  = "Block1"
+	clsBlock2  = "Block2"
+	clsClass   = "Class"
+)
 
 type VMObject struct {
-	Clazz   *VMObject
-	Kind	VMObjType
-	Fields  []*VMObject // local vars (any object) index of field is same as index of Class.InstanceFields
-	Nfields int32
+	Clazz  *VMObject
+	Kind   string
+	Fields []*VMObject // local vars (any object) index of field is same as index of Class.InstanceFields
+	N      int32
+}
+
+type Clazz struct {
+	ClassFields     []*VMObject
+	ClassMethods    []*VMObject
+	InstanceFields  []*VMObject
+	InstanceMethods []*VMObject
 }
 
 // type ObjectInterface interface {
@@ -33,6 +38,21 @@ type VMInteger struct {
 	VMObject
 	Value int32
 }
+
+type VMDouble struct {
+	VMObject
+	Value float64
+}
+
+func (i *VMInteger) doPlus(recv *VMObject, arg *VMObject) *VMObject {
+	if recv.Kind == "Double" || arg.Kind == "Double" {
+		return NewVMDouble(float64(recv.Value) + arg.Value)
+	} else {
+		return NewVMInteger(recv.Value + arg.Value)
+	}
+	return
+}
+
 func NewVMInteger(value int32) *VMInteger {
 	return &VMInteger{Value: value}
 }
@@ -60,12 +80,12 @@ Need 5 things:
 
 // create a HEAP of vmobjects
 type Symbol string
+
 func (h *Heap) NewObject(clazz *VMObject) *VMObject {
 	obj := &VMObject{Clazz: clazz}
 	h.Objects = append(h.Objects, obj)
 	return obj
 }
-
 
 // create a constant pool
 type ConstantPool struct {

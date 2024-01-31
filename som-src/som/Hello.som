@@ -1,0 +1,43 @@
+"
+This is a simple example of a class in the language.
+The class has three methods, 'foo', 'bar', and 'baz'.
+The 'run' method is called when the class is initialized.
+The 'foo' method takes no arguments and returns a number.
+The 'bar' method takes two arguments and returns a number.
+The 'baz' method takes two arguments and returns a number.
+"
+
+Hello = (
+ foo = (| y |
+    y := 4 + 3. 
+    y println.
+    ^ y
+    )
+
+ bar = (| x y z |
+    z := 3.
+    x :=  2 sqrt * 2.
+    y := x + self foo + z.
+    y println.
+    ^ z
+    )
+
+baz: b with: a = ( | x y |
+    x := b.
+    y := a.
+    x println.
+    y println.
+    ^ [ x + y ]
+    )
+
+    "The 'run' method is called when initializing the system"
+    run = (
+        self foo.
+        'ran foo' println.
+        self bar println.
+        'ran bar' println.
+        (self baz: 36 with: 8) value println.
+        'ran baz' println 
+        )
+    
+)

@@ -1,6 +1,8 @@
 # smog
 Simple Machine (Objects) in Go
 
+_End of January 2024_, and I am back to Go.
+
 _well, it *was* in go, until today when I decided to do the whole thing in Swift 5.7+_ But like many projects, once named, 
 
 [SOM (Simple Object Machine)](http://som-st.github.io) is 20-yr plus project for a simple OOP language and interpreter.
@@ -11,15 +13,25 @@ I'd like to make a simple interpreter (bytecode) for the SOM language.
 
 ## Running SOM 
 
+cd into `som-src/som/`
+run a java cmd from there.
+
 ```
-/usr/bin/env ....../Library/Java/JavaVirtualMachines/corretto-11.0.17/Contents/Home/bin/java  -cp som/bin vm.Universe -cp Smalltalk -d Hello.som >& Hello.txt
+# send both stdout & stderr to file
+./som.sh -cp Smalltalk -d Hello.som >& Hello.txt
+# send stderr to file, but stdout to console
+./som.sh -cp Smalltalk -d Hello.som 2> Hello.txt
 ```
+
+It'll drop all the disassembled bytecodes (-d) into the txt file.
+It is ALL the code of the image, not just Hello.som
+
 
 Also, `brew install ant`, that way you can build the Java version using the `build.xml` file.
 
 ## SOM
 
-I have included the source for the java version of SOM in `som/`
+I have included the source for the java version of SOM in `som-src/som/`
 
 ### plan 3
 

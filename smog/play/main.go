@@ -1,5 +1,24 @@
 package main
 
+import (
+	"fmt"
+	"strconv"
+)
+
+// Universe items
+
+var NILClass *VMObject
+var NILObject *VMObject
+
+func init() {
+	NILClass = &VMObject{Clazz: nil, Kind: "NIL"}
+	NILObject = &VMObject{Clazz: NILClass, Kind: "NIL"}
+	//
+	IntegerClass := NewClazz("Integer")
+	// IntegerClass.InstanceFields = []*VMObject{NewVMObject("Integer")}
+}
+
+// Main
 func main() {
 
 	t1 := NewVMInteger(4)
@@ -7,7 +26,18 @@ func main() {
 	op := NewMessage("+", t2)
 
 	result := t1.Send(op)
-	println(result.Value())
+	result.Print()
+}
+
+type Sender interface {
+	ClassOf() string
+	Send(*Message) *VMObject
+	Print()
+}
+
+type Primitive interface {
+	ClassOf() string
+	Value() interface{}
 }
 
 type VMObject struct {
@@ -16,6 +46,7 @@ type VMObject struct {
 	Fields []*VMObject // local vars (any object) index of field is same as index of Class.InstanceFields
 	N      int32
 }
+// remember Stringer below, when pondering the dynamic type lookup and method dispatch
 
 func NewVMObject(cls string) *VMObject {
 	no := &VMObject{Fields: make([]*VMObject, 0)}
@@ -23,18 +54,27 @@ func NewVMObject(cls string) *VMObject {
 	return no
 }
 
+func NewClazz(cls string) *VMObject {
+	no := &VMObject{Fields: make([]*VMObject, 0)}
+	no.Clazz = NILObject
+	no.Kind = cls
+	return no
+}
+
+
+
 func (o *VMObject) ClassOf() string {
-	// TODO
-	return o.Kind
+	return o.Clazz.Kind
 }
 
 func (o *VMObject) Send(m *Message) *VMObject {
+
 	// TODO
 	return o
 }
 
-func (o *VMObject) Value() string {
-	return o.N
+func (o *VMObject) Print() {
+	fmt.Println(o.Kind, o.Fields[0])
 }
 
 type ClassMap struct {
@@ -62,6 +102,26 @@ func NewMessage(s string, args ...*VMObject) (m *Message) {
 	m = &Message{
 		Selector: s,
 	}
-	m.Args = args
+	m.Args = append(m.Args, args...)
 	return m
+}
+
+/*
+* And example of using a dynamic type lookup
+ */
+type Stringer interface {
+	String() string
+}
+
+func AsString(any interface{}) string {
+	if v, ok := any.(Stringer); ok {
+		return v.String()
+	}
+	switch v := any.(type) {
+	case int:
+		return strconv.Itoa(v)
+	case float64:
+		return strconv.FormatFloat(float64(v), 'g', -1, 32)
+	}
+	return "???"
 }

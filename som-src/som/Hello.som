@@ -27,7 +27,11 @@ baz: b with: a = ( | x y |
     y := a.
     x println.
     y println.
-    ^ [ x + y ]
+    ^ [[:c :d| c + d] value: x with: y]
+    )
+
+    recurse: n = (
+        (n > 0) ifTrue: [ self recurse: n - 1. self recurse: n - 1 ]
     )
 
     "The 'run' method is called when initializing the system"

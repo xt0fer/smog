@@ -1,7 +1,9 @@
 # smog
+
 Simple Machine (Objects) in Go
 
 _End of January 2024_, and I am back to Go.
+and this [The Haskell Version of SOM](https://dspace.cvut.cz/bitstream/handle/10467/109352/F8-BP-2023-Riha-Filip-thesis.pdf)
 
 _well, it *was* in go, until today when I decided to do the whole thing in Swift 5.7+_ But like many projects, once named, 
 
@@ -11,7 +13,7 @@ This is a passion project, re-implementing it in [Go](https://go.dev) (golang).
 
 I'd like to make a simple interpreter (bytecode) for the SOM language.
 
-## Running SOM 
+## Running SOM
 
 cd into `som-src/som/`
 run a java cmd from there.
@@ -25,7 +27,6 @@ run a java cmd from there.
 
 It'll drop all the disassembled bytecodes (-d) into the txt file.
 It is ALL the code of the image, not just Hello.som
-
 
 Also, `brew install ant`, that way you can build the Java version using the `build.xml` file.
 
@@ -89,7 +90,7 @@ smog-v2:
 - simple lexer
 - to AST or to a bytecode buffer?
 
-the vm is proving interesting. 
+the vm is proving interesting.
 
 - create simple text format for the bytecodes
 - define interpreter for the bytecodes

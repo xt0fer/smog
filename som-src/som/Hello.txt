@@ -1448,13 +1448,45 @@ Hello>>baz:with: = (
 	  25:SEND              (index: 2) signature: println
 	  27:POP               
 	  28:PUSH_BLOCK        block: (index: 3) (
-		<0 locals, 2 stack, 9 bc_count>
-		   0:PUSH_LOCAL        local: 0, context: 1
-		   3:PUSH_LOCAL        local: 1, context: 1
-		   6:SEND              (index: 0) signature: +
-		   8:RETURN_LOCAL      
+		<0 locals, 3 stack, 11 bc_count>
+		   0:PUSH_BLOCK        block: (index: 0) (
+			<0 locals, 2 stack, 9 bc_count>
+			   0:PUSH_ARGUMENT     argument: 1, context 0
+			   3:PUSH_ARGUMENT     argument: 2, context 0
+			   6:SEND              (index: 0) signature: +
+			   8:RETURN_LOCAL      
+			)
+		   2:PUSH_LOCAL        local: 0, context: 1
+		   5:PUSH_LOCAL        local: 1, context: 1
+		   8:SEND              (index: 1) signature: value:with:
+		  10:RETURN_LOCAL      
 		)
 	  30:RETURN_LOCAL      
+	)
+Hello>>recurse: = (
+	<0 locals, 2 stack, 16 bc_count>
+	   0:PUSH_ARGUMENT     argument: 1, context 0
+	   3:PUSH_CONSTANT     (index: 1) value: (Integer) 0
+	   5:SEND              (index: 0) signature: >
+	   7:PUSH_BLOCK        block: (index: 2) (
+		<0 locals, 3 stack, 26 bc_count>
+		   0:PUSH_ARGUMENT     argument: 0, context 1
+		   3:PUSH_ARGUMENT     argument: 1, context 1
+		   6:PUSH_CONSTANT     (index: 1) value: (Integer) 1
+		   8:SEND              (index: 0) signature: -
+		  10:SEND              (index: 2) signature: recurse:
+		  12:POP               
+		  13:PUSH_ARGUMENT     argument: 0, context 1
+		  16:PUSH_ARGUMENT     argument: 1, context 1
+		  19:PUSH_CONSTANT     (index: 3) value: (Integer) 1
+		  21:SEND              (index: 0) signature: -
+		  23:SEND              (index: 2) signature: recurse:
+		  25:RETURN_LOCAL      
+		)
+	   9:SEND              (index: 3) signature: ifTrue:
+	  11:POP               
+	  12:PUSH_ARGUMENT     argument: 0, context 0
+	  15:RETURN_LOCAL      
 	)
 Hello>>run = (
 	<0 locals, 3 stack, 47 bc_count>
@@ -1494,3 +1526,24 @@ Block2>>value = (
 	  11:RETURN_LOCAL      
 	)
 Block2>>value: = <primitive>
+Block3>>value = (
+	<0 locals, 3 stack, 14 bc_count>
+	   0:PUSH_ARGUMENT     argument: 0, context 0
+	   3:PUSH_GLOBAL       (index: 0) value: nil
+	   5:PUSH_GLOBAL       (index: 0) value: nil
+	   7:SEND              (index: 1) signature: value:with:
+	   9:POP               
+	  10:PUSH_ARGUMENT     argument: 0, context 0
+	  13:RETURN_LOCAL      
+	)
+Block3>>value: = (
+	<0 locals, 3 stack, 15 bc_count>
+	   0:PUSH_ARGUMENT     argument: 0, context 0
+	   3:PUSH_ARGUMENT     argument: 1, context 0
+	   6:PUSH_GLOBAL       (index: 0) value: nil
+	   8:SEND              (index: 1) signature: value:with:
+	  10:POP               
+	  11:PUSH_ARGUMENT     argument: 0, context 0
+	  14:RETURN_LOCAL      
+	)
+Block3>>value:with: = <primitive>

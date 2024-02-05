@@ -1,4 +1,4 @@
-package smog
+package objects
 
 import (
 	"errors"
@@ -53,6 +53,41 @@ var floatMessages = map[string]interface{}{
 	`ceiling`:          ceiling,
 	`negated`:          negated,
 	`degreesToRadians`: degreesToRadians,
+}
+
+var intMessages = map[string]interface{}{
+	`value`: value,
+	`=`:     iequal,
+	`~=`:    inotEqual,
+	`>`:     igreater,
+	`>=`:    igreaterEqual,
+	`<`:     ilesser,
+	`<=`:    ilesserEqual,
+	`+`:     iplus,
+	`-`:     iminus,
+	`*`:     imul,
+	//	`/`:                div,
+	`\\`:   mod,
+	`//`:   idiv,
+	`rem:`: irem,
+	`max:`: imax,
+	`min:`: imin,
+	`abs`:  iabs,
+	// `sqrt`:             sqrt,
+	// `sqr`:              sqr,
+	// `sin`:              sin,
+	// `cos`:              cos,
+	// `tan`:              tan,
+	// `arcSin`:           arcSin,
+	// `arcCos`:           arcCos,
+	// `arcTan`:           arcTan,
+	// `rounded`:          rounded,
+	// `truncated`:        truncated,
+	// `fractionPart`:     fractionPart,
+	// `floor`:            floor,
+	// `ceiling`:          ceiling,
+	// `negated`:          negated,
+	//	`degreesToRadians`: degreesToRadians,
 }
 
 var booleanMessages = map[string]interface{}{
@@ -234,6 +269,81 @@ func negated(receiver *SmogFloat) *SmogFloat {
 
 func degreesToRadians(receiver *SmogFloat) *SmogFloat {
 	return new(SmogFloat).SetValue(receiver.value * math.Pi / 180.0)
+}
+
+// Integer receiver messages section
+
+func iequal(receiver *SmogInteger, arg *SmogInteger) *SmogBoolean {
+	return new(SmogBoolean).SetValue(receiver.GetValue() == arg.GetValue())
+}
+
+func inotEqual(receiver *SmogInteger, arg *SmogInteger) *SmogBoolean {
+	return new(SmogBoolean).SetValue(receiver.GetValue() != arg.GetValue())
+}
+
+func igreater(receiver *SmogInteger, arg *SmogInteger) *SmogBoolean {
+	return new(SmogBoolean).SetValue(receiver.GetValue() > arg.GetValue())
+}
+
+func igreaterEqual(receiver *SmogInteger, arg *SmogInteger) *SmogBoolean {
+	return new(SmogBoolean).SetValue(receiver.GetValue() >= arg.GetValue())
+}
+
+func ilesser(receiver *SmogInteger, arg *SmogInteger) *SmogBoolean {
+	return new(SmogBoolean).SetValue(receiver.GetValue() < arg.GetValue())
+}
+
+func ilesserEqual(receiver *SmogInteger, arg *SmogInteger) *SmogBoolean {
+	return new(SmogBoolean).SetValue(receiver.GetValue() <= arg.GetValue())
+}
+
+func iplus(receiver *SmogInteger, arg *SmogInteger) *SmogInteger {
+	return new(SmogInteger).SetValue(receiver.GetValue() + arg.GetValue())
+}
+
+func iminus(receiver *SmogInteger, arg *SmogInteger) *SmogInteger {
+	return new(SmogInteger).SetValue(receiver.GetValue() - arg.GetValue())
+}
+
+func imul(receiver *SmogInteger, arg *SmogInteger) *SmogInteger {
+	return new(SmogInteger).SetValue(receiver.GetValue() * arg.GetValue())
+}
+
+func idiv(receiver *SmogInteger, arg *SmogInteger) *SmogInteger {
+	return new(SmogInteger).SetValue(receiver.GetValue() / arg.GetValue())
+}
+
+func imod(receiver *SmogInteger, arg *SmogInteger) *SmogInteger {
+	return new(SmogInteger).SetValue(int64(receiver.GetValue()) % int64(arg.GetValue()))
+}
+
+func irem(receiver *SmogInteger, arg *SmogInteger) *SmogInteger {
+	quo := receiver.value / arg.value
+	return new(SmogInteger).SetValue(receiver.value - (quo * arg.value))
+}
+
+func imax(receiver *SmogInteger, arg *SmogInteger) *SmogInteger {
+	if receiver.value > arg.value {
+		return receiver
+	} else {
+		return arg
+	}
+}
+
+func imin(receiver *SmogInteger, arg *SmogInteger) *SmogInteger {
+	if receiver.value > arg.value {
+		return arg
+	} else {
+		return receiver
+	}
+}
+
+func iabs(receiver *SmogInteger) *SmogInteger {
+	if receiver.value < 0 {
+		return new(SmogInteger).SetValue(receiver.value * -1)
+	} else {
+		return receiver
+	}
 }
 
 // Boolean receiver messages section
@@ -484,6 +594,36 @@ func (n *SmogFloat) GetValue() float64 {
 }
 
 func (n *SmogFloat) SetValue(val float64) *SmogFloat {
+	n.value = val
+	return n
+}
+
+type SmogInteger struct {
+	*SmogObject
+	value int64
+}
+
+func NewSmogInteger(value int64) *SmogInteger {
+	return &SmogInteger{&SmogObject{}, value}
+}
+
+func (n *SmogInteger) Value() SmogObjectInterface {
+	return n
+}
+
+func (n *SmogInteger) Send(name string, params []SmogObjectInterface) (SmogObjectInterface, error) {
+	return Call(n, intMessages, name, params)
+}
+
+func (n *SmogInteger) TypeOf() string {
+	return FLOAT_OBJ
+}
+
+func (n *SmogInteger) GetValue() int64 {
+	return n.value
+}
+
+func (n *SmogInteger) SetValue(val int64) *SmogInteger {
 	n.value = val
 	return n
 }

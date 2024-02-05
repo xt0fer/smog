@@ -103,15 +103,19 @@ func (o *VMObject) ClassOf() string {
 
 func (o *VMObject) Send(m *Message) *VMObject {
 	// 1. lookup method in class
-	msgsig := m.Selector
-	methodToCall := o.getMethod(msgsig)
-	// 2. call method with args
-	result := methodToCall(m.Args...)
+	// msgsig := m.Selector
+	// methodToCall := o.getMethod(msgsig)
+	// // 2. call method with args
+	// result := methodToCall(o, m.Args...)
 	// 3. return result
-	return result
+	return NILObject
 }
 
 func (o *VMObject) Print() {
+	if o == NILObject {
+		log.Println("Nil")
+		return
+	}
 	log.Println(o.Kind, o.Fields[0])
 }
 func (o *VMObject) getMethod(selector string) func(*VMObject, ...*VMObject) *VMObject {
@@ -153,12 +157,12 @@ func (o *VMObject) doIntegerAdd(args ...*VMObject) *VMObject {
 	if len(args) != 1 {
 		return NILObject
 	}
-	switch v := (Primitive ) args[0].(type) {
-	case *VMInteger:
-		return NewVMInteger(o.Value + v.Value)
-		// case float64:
-		// 	return strconv.FormatFloat(float64(v), 'g', -1, 32)
-	}
+	// switch v := (Primitive ) args[0].(type) {
+	// case *VMInteger:
+	// 	return NewVMInteger(o.Value + v.Value)
+	// 	// case float64:
+	// 	// 	return strconv.FormatFloat(float64(v), 'g', -1, 32)
+	// }
 	return NILObject
 }
 

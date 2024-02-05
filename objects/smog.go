@@ -654,6 +654,32 @@ func (s *SmogSymbol) SetValue(val string) *SmogSymbol {
 	return s
 }
 
+type SmogString struct {
+	*SmogObject
+	value string
+}
+
+func NewSmogString(value string) *SmogString {
+	return &SmogString{&SmogObject{}, value}
+}
+
+func (s *SmogString) Value() SmogObjectInterface {
+	return s
+}
+
+func (s *SmogString) TypeOf() string {
+	return SYMBOL_OBJ
+}
+
+func (s *SmogString) GetValue() string {
+	return s.value
+}
+
+func (s *SmogString) SetValue(val string) *SmogString {
+	s.value = val
+	return s
+}
+
 type SmogBoolean struct {
 	*SmogObject
 	value bool
@@ -720,7 +746,7 @@ func (a *SmogArray) GetValue() ([]interface{}, error) {
 	var interfaceSlice = make([]interface{}, len(a.array))
 	for i, each := range a.array {
 		switch each.TypeOf() {
-		case NUMBER_OBJ:
+		case FLOAT_OBJ:
 			interfaceSlice[i] = each.(*SmogFloat).GetValue()
 		case STRING_OBJ:
 			interfaceSlice[i] = each.(*SmogString).GetValue()

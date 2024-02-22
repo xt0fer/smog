@@ -5,7 +5,7 @@ Simple Machine (Objects) in Go
 _End of January 2024_, and I am back to Go.
 and this [The Haskell Version of SOM](https://dspace.cvut.cz/bitstream/handle/10467/109352/F8-BP-2023-Riha-Filip-thesis.pdf)
 
-_well, it *was* in go, until today when I decided to do the whole thing in Swift 5.7+_ But like many projects, once named, 
+__Naw, not any more after Feb 2024__ _well, it *was* in go, until today when I decided to do the whole thing in Swift 5.7+_ But like many projects, once named,
 
 [SOM (Simple Object Machine)](http://som-st.github.io) is 20-yr plus project for a simple OOP language and interpreter.
 

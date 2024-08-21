@@ -39,5 +39,4 @@ graph TD;
     B --> AF[Graph Class];
     B --> AG[Table Class];
     B --> AH[File Class];
-    B -->
 ```

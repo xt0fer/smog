@@ -36,8 +36,24 @@ var metaclassClass vm.Class
 // public static Class systemClass;
 // public static Class blockClass;
 // public static Class doubleClass;
-
+var (
+	nilClass        vm.Class
+	integerClass    vm.Class
+	bigintegerClass vm.Class
+	arrayClass      vm.Class
+	methodClass     vm.Class
+	symbolClass     vm.Class
+	frameClass      vm.Class
+	primitiveClass  vm.Class
+	stringClass     vm.Class
+	systemClass     vm.Class
+	blockClass      vm.Class
+	doubleClass     vm.Class
+)
 // private static java.util.HashMap<Symbol,som.vmobjects.Object> globals = new java.util.HashMap<Symbol,som.vmobjects.Object>();
+var (
+	globals map[vm.Symbol]vm.Object
+)
 // private static java.lang.String[] classPath;
 // private static boolean dumpBytecodes;
 

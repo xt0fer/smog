@@ -10,12 +10,12 @@ package vm
 // )
 
 type Class struct {
-	Name        string    // The name of the class
-	ArityField  int       // Number of fields in the class
-	ArityMethod int       // Number of methods in the class
-	Fields      []int     // Indices to Field entities in the constant pool
-	Methods     []*Method // Map of method names to their indices in the constant pool
-	SuperClass  *Class    // Reference to the superclass (if any)
+	Name        string // The name of the class
+	ArityField  int    // Number of fields in the class
+	ArityMethod int    // Number of methods in the class
+	Fields      []int  // Indices to Field entities in the constant pool
+	//Methods     []*Method // Map of method names to their indices in the constant pool
+	SuperClass *Class // Reference to the superclass (if any)
 }
 
 type VMObject struct {
@@ -127,6 +127,46 @@ func (vm *VM) TopFrameStack() *[]VMObject {
 	return &vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1].Stack
 }
 
+// EntityStack is a generic stack data structure that holds Entities.
+type EntityStack struct {
+	items []Entity
+}
+
+// Push adds an item to the top of the stack.
+func (s *EntityStack) Push(item Entity) {
+	s.items = append(s.items, item)
+}
+
+// Pop removes and returns the item from the top of the stack.
+// It returns false if the stack is empty.
+func (s *EntityStack) Pop() (Entity, bool) {
+	if len(s.items) == 0 {
+		return Entity{}, false
+	}
+	item := s.items[len(s.items)-1]
+	s.items = s.items[:len(s.items)-1]
+	return item, true
+}
+
+// Peek returns the item from the top of the stack without removing it.
+// It returns false if the stack is empty.
+func (s *EntityStack) Peek() (Entity, bool) {
+	if len(s.items) == 0 {
+		return Entity{}, false
+	}
+	return s.items[len(s.items)-1], true
+}
+
+// IsEmpty returns true if the stack is empty.
+func (s *EntityStack) IsEmpty() bool {
+	return len(s.items) == 0
+}
+
+// Size returns the number of items in the stack.
+func (s *EntityStack) Size() int {
+	return len(s.items)
+}
+
 // one issue that needs to be resolved, is:
 // when do we de-reference the fields of an object to an actual value for computation?
 // and when do we keep it as a reference to a field in the constant pool?
@@ -160,14 +200,17 @@ func (vm *VM) SetSlot(i int) {
 	obj := frame.Stack[len(frame.Stack)-1]
 	frame.Stack = frame.Stack[:len(frame.Stack)-1] // pop the object
 	// set the field value name (name of the field) to the value
-	fieldName := vm.ConstantPool[i].StrVal
+	fieldName, ok := vm.ConstantPool[i].ToString()
+	if !ok {
+		panic("SetSlot: expected a string")
+	}
 	obj.Fields[fieldName] = value
 	frame.Stack = append(frame.Stack, obj)
 }
 
 func (vm *VM) Send(i, n int) {
 	frame := vm.TopFrame()
-	methodSelector := vm.ConstantPool[i].StrVal
+	methodSelector, ok := vm.ConstantPool[i].ToString()
 	args := frame.Stack[len(frame.Stack)-n:]
 	frame.Stack = frame.Stack[:len(frame.Stack)-n]
 
@@ -283,8 +326,9 @@ func (vm *VM) runMethod(m *Method) {
 
 func (vm *VM) findMethod(class *Class, selector string) *Method {
 	for _, index := range class.Fields {
-		if vm.ConstantPool[index].Type == MethodEntity && vm.ConstantPool[index].Method.Selector == selector {
-			return vm.ConstantPool[index].Method
+		if vm.ConstantPool[index].Type == MethodEntity {
+			m, _ := vm.ConstantPool[index].ToMethod()
+			return m
 		}
 	}
 	return nil
@@ -343,6 +387,11 @@ type Entity struct {
 	// Class  *Class
 }
 
+// NewEntity creates a new Entity with the given type and value.
+func NewEntity(t EntityType, v interface{}) *Entity {
+	return &Entity{Type: t, Value: v}
+}
+
 // ToInt returns the int value if the type is IntEntity, otherwise returns 0.
 func (e Entity) ToInt() (int32, bool) {
 	if e.Type == IntEntity {
@@ -397,6 +446,11 @@ func (e Entity) ToClass() (*Class, bool) {
 		return e.Value.(*Class), true
 	}
 	return nil, false
+}
+
+// ToNil returns true if the type is NilEntity, otherwise returns false.
+func (e Entity) ToNil() bool {
+	return e.Type == NilEntity
 }
 
 type Field struct {

@@ -9,19 +9,19 @@ package vm
 // (’Hello, ’, name) print )
 // )
 
-type VMClass struct {
+type Class struct {
 	Name        string    // The name of the class
 	ArityField  int       // Number of fields in the class
 	ArityMethod int       // Number of methods in the class
 	Fields      []int     // Indices to Field entities in the constant pool
 	Methods     []*Method // Map of method names to their indices in the constant pool
-	SuperClass  *VMClass  // Reference to the superclass (if any)
+	SuperClass  *Class    // Reference to the superclass (if any)
 }
 
 type VMObject struct {
 	// Properties of the object
-	Fields []int    // Indices to Field entities in the constant pool
-	Class  *VMClass // Points to the class of the object
+	Fields []int  // Indices to Field entities in the constant pool
+	Class  *Class // Points to the class of the object
 }
 
 type Frame struct {
@@ -89,7 +89,7 @@ func (h *Heap) allocObject() (*VMObject, int) {
 // 	})
 // }
 
-func (h *Heap) NewInstanceOf(class *VMClass) *VMObject {
+func (h *Heap) NewInstanceOf(class *Class) *VMObject {
 	obj := &VMObject{
 		Fields: make([]int, 1),
 		Class:  class,
@@ -99,8 +99,8 @@ func (h *Heap) NewInstanceOf(class *VMClass) *VMObject {
 }
 
 type GlobalContext struct {
-	classes                   map[string]*VMClass // Stores all the classes available in the context
-	trueObj, falseObj, nilObj *VMObject           // Predefined true, false, nil objects
+	classes                   map[string]*Class // Stores all the classes available in the context
+	trueObj, falseObj, nilObj *VMObject         // Predefined true, false, nil objects
 }
 
 type CodeAddress struct {
@@ -143,7 +143,7 @@ func (vm *VM) Lit(i int) {
 		VMObject{Fields: []int{entity}})
 }
 func (vm *VM) GetSlot(i int) {
-	frame := vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1]
+	frame := vm.TopFrame()
 	obj := frame.Stack[len(frame.Stack)-1]
 	fieldName := vm.ConstantPool[i].StrVal
 	frame.Stack = frame.Stack[:len(frame.Stack)-1] // pop the object
@@ -152,18 +152,21 @@ func (vm *VM) GetSlot(i int) {
 }
 
 func (vm *VM) SetSlot(i int) {
-	frame := vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1]
+	frame := vm.TopFrame()
+	// pop the value from the stack
 	value := frame.Stack[len(frame.Stack)-1]
 	frame.Stack = frame.Stack[:len(frame.Stack)-1]
+	// pop the object from the stack
 	obj := frame.Stack[len(frame.Stack)-1]
 	frame.Stack = frame.Stack[:len(frame.Stack)-1] // pop the object
+	// set the field value name (name of the field) to the value
 	fieldName := vm.ConstantPool[i].StrVal
 	obj.Fields[fieldName] = value
 	frame.Stack = append(frame.Stack, obj)
 }
 
 func (vm *VM) Send(i, n int) {
-	frame := vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1]
+	frame := vm.TopFrame()
 	methodSelector := vm.ConstantPool[i].StrVal
 	args := frame.Stack[len(frame.Stack)-n:]
 	frame.Stack = frame.Stack[:len(frame.Stack)-n]
@@ -181,7 +184,7 @@ func (vm *VM) Send(i, n int) {
 		Arguments:      append([]VMObject{self}, args...),
 		Locals:         make([]VMObject, method.NumLocals),
 		Stack:          []VMObject{},
-		InitialAddress: CodeAddress{instructionPointer: vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1].ReturnAddress.instructionPointer},
+		InitialAddress: CodeAddress{instructionPointer: vm.TopFrame().ReturnAddress.instructionPointer},
 		ReturnAddress:  CodeAddress{instructionPointer: 0},
 	}
 	vm.ExecStack.pushFrame(newFrame)
@@ -189,27 +192,27 @@ func (vm *VM) Send(i, n int) {
 }
 
 func (vm *VM) GetLocal(i int) {
-	frame := vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1]
+	frame := vm.TopFrame()
 	local := frame.Locals[i]
 	frame.Stack = append(frame.Stack, local)
 }
 
 func (vm *VM) SetLocal(i int) {
-	frame := vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1]
+	frame := vm.TopFrame()
 	value := frame.Stack[len(frame.Stack)-1]
 	frame.Stack = frame.Stack[:len(frame.Stack)-1]
 	frame.Locals[i] = value
 }
 
 func (vm *VM) GetSelf() {
-	frame := vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1]
-	self := frame.arguments[0] // 'self' is always the first argument
+	frame := vm.TopFrame()
+	self := frame.Arguments[0] // 'self' is always the first argument
 	frame.Stack = append(frame.Stack, self)
 }
 
 func (vm *VM) GetArg(i int) {
-	frame := vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1]
-	arg := frame.arguments[i]
+	frame := vm.TopFrame()
+	arg := frame.Arguments[i]
 	frame.Stack = append(frame.Stack, arg)
 }
 
@@ -217,21 +220,21 @@ func (vm *VM) Block(i int) {
 	block := vm.ConstantPool[i].Block
 	blockObj, _ := vm.Heap.allocObject()
 	blockObj.Fields["block"] = block
-	vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1].Stack = append(vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1].Stack, *blockObj)
+	vm.TopFrame().Stack = append(vm.TopFrame().Stack, *blockObj)
 }
 
 func (vm *VM) Ret() {
 	frame := vm.ExecStack.popFrame()
 	value := frame.Stack[len(frame.Stack)-1]
-	vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1].Stack = append(vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1].Stack, value)
+	vm.TopFrame().Stack = append(vm.TopFrame().Stack, value)
 }
 
 func (vm *VM) Retnl(i int) {
-	frame := vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1]
+	frame := vm.TopFrame()
 	value := frame.Stack[len(frame.Stack)-1]
 	// Logic to handle non-local return based on the argument i
 	vm.ExecStack.Frames = vm.ExecStack.Frames[:len(vm.ExecStack.Frames)-i] // Adjust the Stack to the appropriate frame
-	vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1].Stack = append(vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1].Stack, value)
+	vm.TopFrame().Stack = append(vm.TopFrame().Stack, value)
 }
 
 func (vm *VM) runMethod(m *Method) {
@@ -329,14 +332,71 @@ const (
 )
 
 type Entity struct {
-	Type   EntityType
-	IntVal int32
-	DblVal float64
-	StrVal string
-	Field  *Field
-	Method *Method
-	Block  *Block
-	Class  *Class
+	Type  EntityType
+	Value interface{}
+	// IntVal int32
+	// DblVal float64
+	// StrVal string
+	// Field  *Field
+	// Method *Method
+	// Block  *Block
+	// Class  *Class
+}
+
+// ToInt returns the int value if the type is IntEntity, otherwise returns 0.
+func (e Entity) ToInt() (int32, bool) {
+	if e.Type == IntEntity {
+		return e.Value.(int32), true
+	}
+	return 0, false
+}
+
+// ToFloat returns the float64 value if the type is DoubleEntity, otherwise returns 0.0.
+func (e Entity) ToFloat() (float64, bool) {
+	if e.Type == DoubleEntity {
+		return e.Value.(float64), true
+	}
+	return 0.0, false
+}
+
+// ToString returns the string value if the type is StringEntity, otherwise returns "".
+func (e Entity) ToString() (string, bool) {
+	if e.Type == StringEntity {
+		return e.Value.(string), true
+	}
+	return "", false
+}
+
+// ToField returns the Field value if the type is FieldEntity, otherwise returns nil.
+func (e Entity) ToField() (*Field, bool) {
+	if e.Type == FieldEntity {
+		return e.Value.(*Field), true
+	}
+	return nil, false
+}
+
+// ToMethod returns the Method value if the type is MethodEntity, otherwise returns nil.
+func (e Entity) ToMethod() (*Method, bool) {
+	if e.Type == MethodEntity {
+		return e.Value.(*Method), true
+	}
+	return nil, false
+}
+
+// ToBlock returns the Block value if the type is BlockEntity, otherwise returns nil.
+func (e Entity) ToBlock() (*Block, bool) {
+	if e.Type == BlockEntity {
+		return e.Value.(*Block), true
+	}
+	return nil, false
+}
+
+// ToClass returns the Class value if the type is ClassEntity, otherwise returns nil.
+func (e Entity) ToClass() (*Class, bool) {
+	if e.Type == ClassEntity {
+		return e.Value.(*Class), true
+	}
+	return nil, false
 }
 
 type Field struct {
@@ -350,6 +410,11 @@ type Method struct {
 	Instructions []byte
 }
 
+// Interface for Primitive
+type PrimitiveInterface interface {
+	// Implementations for the primitive
+}
+
 type Primitive struct {
 	Name string
 	Impl func() // Implementation in the VM
@@ -358,168 +423,4 @@ type Primitive struct {
 type Block struct {
 	Arity        int
 	Instructions []byte
-}
-
-// LIT i: Push a constant from the constant pool onto the stack
-func (vm *VM) Lit(i int) {
-	entity := vm.ConstantPool[i]
-	vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1].Stack = append(vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1].Stack, VMObject{Fields: map[string]interface{}{"value": entity}})
-}
-
-// GET SLOT i: Retrieve a field from an object and push it onto the stack
-func (vm *VM) GetSlot(i int) {
-	frame := vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1]
-	obj := frame.Stack[len(frame.Stack)-1]
-	fieldName := vm.ConstantPool[i].StrVal
-	frame.Stack = frame.Stack[:len(frame.Stack)-1] // pop the object
-	value := obj.Fields[fieldName]
-	frame.Stack = append(frame.Stack, value.(VMObject)) // push the field value
-}
-
-// SET SLOT i: Set a field in an object with the value on the top of the stack
-func (vm *VM) SetSlot(i int) {
-	frame := vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1]
-	value := frame.Stack[len(frame.Stack)-1]
-	frame.Stack = frame.Stack[:len(frame.Stack)-1]
-	obj := frame.Stack[len(frame.Stack)-1]
-	frame.Stack = frame.Stack[:len(frame.Stack)-1] // pop the object
-	fieldName := vm.ConstantPool[i].StrVal
-	obj.Fields[fieldName] = value
-	frame.Stack = append(frame.Stack, obj)
-}
-
-// SEND i n: Send a message to an object, creating a new frame
-func (vm *VM) Send(i, n int) {
-	frame := vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1]
-	methodSelector := vm.ConstantPool[i].StrVal
-	args := frame.Stack[len(frame.Stack)-n:]
-	frame.Stack = frame.Stack[:len(frame.Stack)-n]
-
-	// Assume `self` is on the stack before args
-	self := frame.Stack[len(frame.Stack)-1]
-	frame.Stack = frame.Stack[:len(frame.Stack)-1]
-
-	// Find the method to invoke
-	class := self.Class
-	method := vm.findMethod(class, methodSelector)
-
-	// Create a new frame for method invocation
-	newFrame := &Frame{
-		Args:       append([]VMObject{self}, args...),
-		Locals:     make([]VMObject, method.NumLocals),
-		Stack:      []VMObject{},
-		ReturnAddr: CodeAddress{InstructionPointer: vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1].ReturnAddr.InstructionPointer},
-	}
-	vm.ExecStack.PushFrame(newFrame)
-	vm.runMethod(method)
-}
-
-// GET LOCAL i: Retrieve a local variable and push it onto the stack
-func (vm *VM) GetLocal(i int) {
-	frame := vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1]
-	local := frame.Locals[i]
-	frame.Stack = append(frame.Stack, local)
-}
-
-// SET LOCAL i: Pop a value from the stack and store it as a local variable
-func (vm *VM) SetLocal(i int) {
-	frame := vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1]
-	value := frame.Stack[len(frame.Stack)-1]
-	frame.Stack = frame.Stack[:len(frame.Stack)-1]
-	frame.Locals[i] = value
-}
-
-// GET SELF: Push the current object (self) onto the stack
-func (vm *VM) GetSelf() {
-	frame := vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1]
-	self := frame.Args[0] // 'self' is always the first argument
-	frame.Stack = append(frame.Stack, self)
-}
-
-// GET ARG i: Retrieve the i-th argument of the current message and push it on top of the stack
-func (vm *VM) GetArg(i int) {
-	frame := vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1]
-	arg := frame.Args[i]
-	frame.Stack = append(frame.Stack, arg)
-}
-
-// BLOCK i: Create a code block object and push it onto the stack
-func (vm *VM) Block(i int) {
-	block := vm.ConstantPool[i].Block
-	blockObj := vm.Heap.NewObject()
-	blockObj.Fields["block"] = block
-	vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1].Stack = append(vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1].Stack, *blockObj)
-}
-
-// RET: Return from a method call
-func (vm *VM) Ret() {
-	frame := vm.ExecStack.PopFrame()
-	value := frame.Stack[len(frame.Stack)-1]
-	vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1].Stack = append(vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1].Stack, value)
-}
-
-// RETNL i: Non-local return
-func (vm *VM) Retnl(i int) {
-	frame := vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1]
-	value := frame.Stack[len(frame.Stack)-1]
-	// Logic to handle non-local return based on the argument i
-	vm.ExecStack.Frames = vm.ExecStack.Frames[:len(vm.ExecStack.Frames)-i] // Adjust the stack to the appropriate frame
-	vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1].Stack = append(vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1].Stack, value)
-}
-
-// Helper methods
-
-// runMethod executes the instructions of a method
-func (vm *VM) runMethod(m *Method) {
-	ip := 0
-	for ip < len(m.Instructions) {
-		instruction := m.Instructions[ip]
-		switch instruction {
-		case 0x00: // LIT
-			vm.Lit(int(m.Instructions[ip+1]))
-			ip += 2
-		case 0x01: // GET SLOT
-			vm.GetSlot(int(m.Instructions[ip+1]))
-			ip += 2
-		case 0x02: // SET SLOT
-			vm.SetSlot(int(m.Instructions[ip+1]))
-			ip += 2
-		case 0x03: // SEND
-			vm.Send(int(m.Instructions[ip+1]), int(m.Instructions[ip+2]))
-			ip += 3
-		case 0x04: // GET LOCAL
-			vm.GetLocal(int(m.Instructions[ip+1]))
-			ip += 2
-		case 0x05: // SET LOCAL
-			vm.SetLocal(int(m.Instructions[ip+1]))
-			ip += 2
-		case 0x06: // GET SELF
-			vm.GetSelf()
-			ip++
-		case 0x07: // GET ARG
-			vm.GetArg(int(m.Instructions[ip+1]))
-			ip += 2
-		case 0x08: // BLOCK
-			vm.Block(int(m.Instructions[ip+1]))
-			ip += 2
-		case 0x09: // RET
-			vm.Ret()
-			ip++
-			return
-		case 0x0A: // RETNL
-			vm.Retnl(int(m.Instructions[ip+1]))
-			ip += 2
-			return
-		}
-	}
-}
-
-// findMethod is a helper function to locate a method in a class
-func (vm *VM) findMethod(class *Class, selector string) *Method {
-	for _, index := range class.Fields {
-		if vm.ConstantPool[index].Type == MethodEntity && vm.ConstantPool[index].Method.Selector == selector {
-			return vm.ConstantPool[index].Method
-		}
-	}
-	return nil
 }

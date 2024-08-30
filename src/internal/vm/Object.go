@@ -115,16 +115,16 @@ type Interpreter struct{}
 
 type VM struct {
 	ConstantPool []Entity
-	ExecStack    ExecutionStack
+	CallStack    ExecutionStack
 	Heap         Heap
 }
 
 // readability functions for the VM
 func (vm *VM) TopFrame() *Frame {
-	return vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1]
+	return vm.CallStack.Frames[len(vm.CallStack.Frames)-1]
 }
 func (vm *VM) TopFrameStack() *[]VMObject {
-	return &vm.ExecStack.Frames[len(vm.ExecStack.Frames)-1].Stack
+	return &vm.CallStack.Frames[len(vm.CallStack.Frames)-1].Stack
 }
 
 // EntityStack is a generic stack data structure that holds Entities.
@@ -177,32 +177,35 @@ func (s *EntityStack) Size() int {
 // if it is a primitive, we need to push the primitive onto the stack (?) or push a reference to the primitive/field?
 
 func (vm *VM) Lit(i int) {
-	entity := vm.ConstantPool[i]
+	// entity := vm.ConstantPool[i]
 	tstack := vm.TopFrameStack()
 	*tstack = append(*tstack,
-		VMObject{Fields: []int{entity}})
+		VMObject{Fields: []int{i}})
 }
-func (vm *VM) GetSlot(i int) {
+func (vm *VM) GetField(i int) {
 	frame := vm.TopFrame()
+	// pop the VMObject from the stack
 	obj := frame.Stack[len(frame.Stack)-1]
-	fieldName := vm.ConstantPool[i].StrVal
-	frame.Stack = frame.Stack[:len(frame.Stack)-1] // pop the object
-	value := obj.Fields[fieldName]
-	frame.Stack = append(frame.Stack, value.(VMObject)) // push the field value
+	frame.Stack = frame.Stack[:len(frame.Stack)-1]
+
+	ventity := vm.ConstantPool[obj.Fields[i]]
+	// wrap the field value in a VMObject
+
+	frame.Stack = append(frame.Stack, value) // push the field value
 }
 
-func (vm *VM) SetSlot(i int) {
+func (vm *VM) SetField(i int) {
 	frame := vm.TopFrame()
 	// pop the value from the stack
 	value := frame.Stack[len(frame.Stack)-1]
 	frame.Stack = frame.Stack[:len(frame.Stack)-1]
 	// pop the object from the stack
 	obj := frame.Stack[len(frame.Stack)-1]
-	frame.Stack = frame.Stack[:len(frame.Stack)-1] // pop the object
+	frame.Stack = frame.Stack[:len(frame.Stack)-1]
 	// set the field value name (name of the field) to the value
 	fieldName, ok := vm.ConstantPool[i].ToString()
 	if !ok {
-		panic("SetSlot: expected a string")
+		panic("SetField: expected a string")
 	}
 	obj.Fields[fieldName] = value
 	frame.Stack = append(frame.Stack, obj)
@@ -210,7 +213,8 @@ func (vm *VM) SetSlot(i int) {
 
 func (vm *VM) Send(i, n int) {
 	frame := vm.TopFrame()
-	methodSelector, ok := vm.ConstantPool[i].ToString()
+	methodSelector, _ := vm.ConstantPool[i].ToString()
+	// check if the method exists!
 	args := frame.Stack[len(frame.Stack)-n:]
 	frame.Stack = frame.Stack[:len(frame.Stack)-n]
 
@@ -230,7 +234,7 @@ func (vm *VM) Send(i, n int) {
 		InitialAddress: CodeAddress{instructionPointer: vm.TopFrame().ReturnAddress.instructionPointer},
 		ReturnAddress:  CodeAddress{instructionPointer: 0},
 	}
-	vm.ExecStack.pushFrame(newFrame)
+	vm.CallStack.pushFrame(newFrame)
 	vm.runMethod(method)
 }
 
@@ -242,8 +246,10 @@ func (vm *VM) GetLocal(i int) {
 
 func (vm *VM) SetLocal(i int) {
 	frame := vm.TopFrame()
+	// pop the value from the stack
 	value := frame.Stack[len(frame.Stack)-1]
 	frame.Stack = frame.Stack[:len(frame.Stack)-1]
+	// set the local variable to the value
 	frame.Locals[i] = value
 }
 
@@ -260,14 +266,17 @@ func (vm *VM) GetArg(i int) {
 }
 
 func (vm *VM) Block(i int) {
-	block := vm.ConstantPool[i].Block
-	blockObj, _ := vm.Heap.allocObject()
-	blockObj.Fields["block"] = block
-	vm.TopFrame().Stack = append(vm.TopFrame().Stack, *blockObj)
+	_, bi := vm.ConstantPool[i].ToBlock()
+	if bi {
+		blockObj, _ := vm.Heap.allocObject()
+		// setup a block object.
+		blockObj.Fields = append(blockObj.Fields, i)
+		vm.TopFrame().Stack = append(vm.TopFrame().Stack, *blockObj)
+	}
 }
 
 func (vm *VM) Ret() {
-	frame := vm.ExecStack.popFrame()
+	frame := vm.CallStack.popFrame()
 	value := frame.Stack[len(frame.Stack)-1]
 	vm.TopFrame().Stack = append(vm.TopFrame().Stack, value)
 }
@@ -276,7 +285,7 @@ func (vm *VM) Retnl(i int) {
 	frame := vm.TopFrame()
 	value := frame.Stack[len(frame.Stack)-1]
 	// Logic to handle non-local return based on the argument i
-	vm.ExecStack.Frames = vm.ExecStack.Frames[:len(vm.ExecStack.Frames)-i] // Adjust the Stack to the appropriate frame
+	vm.CallStack.Frames = vm.CallStack.Frames[:len(vm.CallStack.Frames)-i] // Adjust the Stack to the appropriate frame
 	vm.TopFrame().Stack = append(vm.TopFrame().Stack, value)
 }
 
@@ -288,11 +297,11 @@ func (vm *VM) runMethod(m *Method) {
 		case 0x00: // LIT
 			vm.Lit(int(m.Instructions[ip+1]))
 			ip += 2
-		case 0x01: // GET SLOT
-			vm.GetSlot(int(m.Instructions[ip+1]))
+		case 0x01: // GET Field
+			vm.GetField(int(m.Instructions[ip+1]))
 			ip += 2
-		case 0x02: // SET SLOT
-			vm.SetSlot(int(m.Instructions[ip+1]))
+		case 0x02: // SET Field
+			vm.SetField(int(m.Instructions[ip+1]))
 			ip += 2
 		case 0x03: // SEND
 			vm.Send(int(m.Instructions[ip+1]), int(m.Instructions[ip+2]))
@@ -343,10 +352,10 @@ func (i *Interpreter) Interpret(p *Program, gc *GlobalContext) {
 func main() {
 	// Initialize global context with basic objects and classes
 	globalContext := &GlobalContext{
-		classes:  make(map[string]*VMClass),
-		trueObj:  &VMObject{fields: make(map[string]interface{})},
-		falseObj: &VMObject{fields: make(map[string]interface{})},
-		nilObj:   &VMObject{fields: make(map[string]interface{})},
+		classes:  make(map[string]*Class),
+		trueObj:  &VMObject{Fields: make([]int, 0)},
+		falseObj: &VMObject{Fields: make([]int, 0)},
+		nilObj:   &VMObject{Fields: make([]int, 0)},
 	}
 
 	// Load program bytecode (this could be loaded from a file, for example)
@@ -470,8 +479,8 @@ type PrimitiveInterface interface {
 }
 
 type Primitive struct {
-	Name string
-	Impl func() // Implementation in the VM
+	NameIx int
+	Impl   func() // Implementation in the VM
 }
 
 type Block struct {
